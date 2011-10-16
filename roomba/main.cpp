@@ -16,6 +16,7 @@ pthread_cond_t endCondition = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t endMutex = PTHREAD_MUTEX_INITIALIZER;
 bool isInit = false;
 bool isEnding = false;
+unsigned long connectedHost = 0;
 
 void error(const char *msg)
 {
@@ -45,6 +46,7 @@ void* StreamSensorData(void* arg)
 		{
 			isEnding = false;
 			pthread_mutex_unlock( &endMutex );
+			connectedHost = 0;
 			break;
 		}
 		pthread_mutex_unlock( &endMutex );
@@ -63,6 +65,7 @@ void MakeConnection(Packet & packet)
 		debugMsg(__func__, "Connection is already occupied.");
 		return;
 	}
+	connectedHost = packet.addr.s_addr;
 	pthread_t sensorThread;
 	printf("Sensor Thread: %d.\n", 
 		pthread_create(&sensorThread, NULL, StreamSensorData, (void*)&packet.addr.s_addr));
@@ -70,7 +73,6 @@ void MakeConnection(Packet & packet)
 
 void ProcessPackets(Packet & packet)
 {
-	debugMsg(__func__, "Start processing packet ...");
 	switch(packet.type)
 	{
 		case INIT:
@@ -90,6 +92,14 @@ void ProcessPackets(Packet & packet)
 			break;
 		case CTRL:
 			debugMsg(__func__, "======= packet received, type: CTRL");
+			if (connectedHost == packet.addr.s_addr)
+			{
+				HandleControls();
+			}
+			else
+			{
+				debugMsg(__func__, "There is no connection made with this client, please INIT first");
+			}
 			break;
 		case DATA:
 			debugMsg(__func__, "======= packet received, type: DATA");
