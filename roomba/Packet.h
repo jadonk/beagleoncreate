@@ -1,6 +1,10 @@
 #ifndef PACKET_H
 #define PACKET_H
 
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+
 #define MAXPACKETSIZE 1024
 enum PacketType
 {
@@ -16,6 +20,8 @@ enum PacketType
 struct Packet
 {
 	PacketType type;
+	unsigned short port;
+	struct in_addr addr;
 	union
 	{
 		struct
