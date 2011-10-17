@@ -22,7 +22,7 @@ function varargout = gui(varargin)
 
 % Edit the above text to modify the response to help gui
 
-% Last Modified by GUIDE v2.5 17-Oct-2011 03:28:45
+% Last Modified by GUIDE v2.5 17-Oct-2011 04:06:29
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,10 +54,10 @@ function gui_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for gui
 handles.output = hObject;
-
+global videoON;
+videoON = 0;
 % Update handles structure
 guidata(hObject, handles);
-
 % UIWAIT makes gui wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
@@ -79,6 +79,13 @@ while(1)
         if size ~= 0
             imshow(img,'DisplayRange',[0 255])
         end
+    end
+    tag = streamCreateARtag();
+    if tag.id ~= -1
+        set(handles.txtX,'String',num2str(tag.x));
+        set(handles.txtY,'String',num2str(tag.y));
+        set(handles.txtZ,'String',num2str(tag.z));
+        set(handles.txtYaw,'String',num2str(tag.yaw));
     end
     pause(0.1)
 end
@@ -133,3 +140,4 @@ function btnCTRL_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 sendpacket('CTRL');
+
