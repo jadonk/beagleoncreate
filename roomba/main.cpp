@@ -19,6 +19,9 @@
 
 #include "ARtagLocalizer.h"
 
+#define VIDEO_PORT 8855
+#define ARTAG_PORT 8844
+
 using namespace cv;
 using namespace std;
 
@@ -44,7 +47,8 @@ static uchar * IMG_data;
 static ARtagLocalizer ar;
 
 int remoteSock;
-struct sockaddr_in remote;
+struct sockaddr_in remoteVideo;
+struct sockaddr_in remoteARtag;
 
 void error(const char *msg)
 {
@@ -65,7 +69,29 @@ void SendImage(IplImage * image)
 	packet.u.image.height = image->height;
 	memcpy(&packet.u.image.data, image->imageData, sizeof(packet.u.image.data));
 
-	if (sendto(remoteSock, (unsigned char*)&packet, sizeof(packet), 0, (const struct sockaddr *)&remote, sizeof(struct sockaddr_in)) < 0) error("sendto");
+	if (sendto(remoteSock, (unsigned char*)&packet, sizeof(packet), 0, (const struct sockaddr *)&remoteVideo, sizeof(struct sockaddr_in)) < 0) error("sendto");
+}
+
+void SendARtag()
+{
+	Packet packet;
+	packet.type = DATA;
+	int numARtags = ar.getARtagSize();
+	for (int i = 0; i < numARtags; ++i)
+	{
+		ARtag* tag = ar.getARtag(i);
+		packet.u.data.tagId = tag->getId();
+		cv::Mat pose = tag->getPose();
+		packet.u.data.x = pose.at<float>(0,3)/1000.f;
+		packet.u.data.y = pose.at<float>(1,3)/1000.f;
+		packet.u.data.z = pose.at<float>(2,3)/1000.f;
+		packet.u.data.yaw = -atan2(pose.at<float>(1,0), pose.at<float>(0,0));
+		if (packet.u.data.yaw < 0)
+		{
+			packet.u.data.yaw += 6.28;
+		}
+		if (sendto(remoteSock, (unsigned char*)&packet, sizeof(packet), 0, (const struct sockaddr *)&remoteARtag, sizeof(struct sockaddr_in)) < 0) error("sendto");
+	}
 }
 
 GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data)
@@ -86,6 +112,7 @@ GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data)
 	{
 //		debugMsg(__func__, "No artag in the view.");
 	}
+	SendARtag();
 	IplImage* grayrz = cvCreateImage(cvSize(160,120), IPL_DEPTH_8U, 1);
 	cvResize(gray, grayrz);
 	SendImage(grayrz);
@@ -353,9 +380,13 @@ void MakeConnection(Packet & packet)
 	remoteSock = socket(AF_INET, SOCK_DGRAM, 0);
 	if (remoteSock < 0) error("socket");
 
-	remote.sin_family = AF_INET;
-	remote.sin_addr.s_addr = packet.addr.s_addr;
-	remote.sin_port = htons(8855);
+	remoteVideo.sin_family = AF_INET;
+	remoteVideo.sin_addr.s_addr = packet.addr.s_addr;
+	remoteVideo.sin_port = htons(VIDEO_PORT);
+
+	remoteARtag.sin_family = AF_INET;
+	remoteARtag.sin_addr.s_addr = packet.addr.s_addr;
+	remoteARtag.sin_port = htons(ARTAG_PORT);
 
 	connectedHost = packet.addr.s_addr;
 	pthread_t sensorThread;

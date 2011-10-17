@@ -44,8 +44,8 @@ struct Packet
 			int tagId;
 			float x;
 			float y;
+			float z;
 			float yaw;
-			float timestamp;
 		}data;
 
 		struct
