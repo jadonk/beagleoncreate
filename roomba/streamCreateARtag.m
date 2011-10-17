@@ -8,7 +8,7 @@ set(u,'Timeout',0.2)
 tag.id = -1;
 fopen(u);
 [packet size] = fread(u);
-if size ~= 0
+if size > 15
     tag.id = typecast(uint8(packet(13:16)),'int32');
     tag.x = typecast(uint8(packet(17:20)),'single');
     tag.y = typecast(uint8(packet(21:24)),'single');
