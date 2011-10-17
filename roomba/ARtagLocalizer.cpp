@@ -63,7 +63,7 @@ int ARtagLocalizer::initARtagPose(int width, int height, float markerWidth, floa
 		delete tracker;
 		return -1;
 	}
-	printf("tracker init\n");
+	//printf("tracker init\n");
 	patternWidth_ = markerWidth;
 	// define size of the marker
     tracker->setPatternWidth(patternWidth_);
@@ -86,7 +86,7 @@ int ARtagLocalizer::initARtagPose(int width, int height, float markerWidth, floa
     // switch to simple ID based markers
     // use the tool in tools/IdPatGen to generate markers
     tracker->setMarkerMode(useBCH ? ARToolKitPlus::MARKER_ID_BCH : ARToolKitPlus::MARKER_ID_SIMPLE);
-	printf("finished init\n");
+	//printf("finished init\n");
 	init = true;
 	return 0;
 }

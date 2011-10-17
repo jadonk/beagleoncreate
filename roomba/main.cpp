@@ -31,6 +31,7 @@ unsigned long connectedHost = 0;
 
 static GMainLoop *loop       = NULL;
 static GstElement *pipeline1 = NULL;
+static GstElement *pipeline2 = NULL;
 //AppSrc name
 static const char app_src_name[]  = "app-src_01";
 //AppSink name
@@ -57,8 +58,6 @@ GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data)
 {
 	GstBuffer *buffer = gst_app_sink_pull_buffer( (GstAppSink*) gst_bin_get_by_name( GST_BIN(pipeline1), app_sink_name));
 
-	// copies AppSink buffer data to the uchar vector of IplImage */
-	memcpy(IMG_data, GST_BUFFER_DATA(buffer), GST_BUFFER_SIZE(buffer));
 	//processing...
 	//handle imageData for processing
 	IMG_data = (uchar*) img->imageData;
@@ -130,21 +129,21 @@ static gboolean bus_call(GstBus *bus, GstMessage *msg, gpointer data)
 			GstState pending;
 
 			gst_message_parse_state_changed (msg,&oldstate,&newstate,&pending);
-			g_debug("pipeline:%s old:%s new:%s pending:%s", userdata, gst_element_state_get_name(oldstate), gst_element_state_get_name(newstate), gst_element_state_get_name(pending));
+			//g_debug("pipeline:%s old:%s new:%s pending:%s", userdata, gst_element_state_get_name(oldstate), gst_element_state_get_name(newstate), gst_element_state_get_name(pending));
 			break;
 		}
 
 		case GST_MESSAGE_WARNING:
 		{
-			gchar *debug;
-			GError *error;
+			//gchar *debug;
+			//GError *error;
 
-			gst_message_parse_warning (msg,&error,&debug);
-			g_warning("pipeline:%s",userdata);
-			g_warning("debug: %s", debug);
-			g_warning("error: %s", error->message);
-			g_free (debug);
-			g_error_free (error);
+			//gst_message_parse_warning (msg,&error,&debug);
+			//g_warning("pipeline:%s",userdata);
+			//g_warning("debug: %s", debug);
+			//g_warning("error: %s", error->message);
+			//g_free (debug);
+			//g_error_free (error);
 			break;
 		}
 
@@ -156,34 +155,34 @@ static gboolean bus_call(GstBus *bus, GstMessage *msg, gpointer data)
 
 void* StreamARtagVideo(void* arg)
 {
-		// GStreamer stuff...
+	// GStreamer stuff...
 	GError *error = NULL;
 	GstBus *bus = NULL;
 	GstAppSinkCallbacks callbacks;
 	gchar pipeline1_str[256];
 	gchar pipeline2_str[256];
-	
+
 	// OpenCV stuff...
 	int nChannels = 3;
 	img = cvCreateImage( cvSize(IMG_width,IMG_height), IPL_DEPTH_8U, nChannels);
 	gray = cvCreateImage( cvSize(IMG_width,IMG_height), IPL_DEPTH_8U, 1);
 
 	// Initializing GStreamer
-	g_print("Initializing GStreamer.\n");
-	gst_init(&argc, &argv);
+	//g_print("Initializing GStreamer.\n");
+	gst_init(NULL, NULL);
 
-	g_print("Creating Main Loop.\n");
+	//g_print("Creating Main Loop.\n");
 	loop = g_main_loop_new(NULL,FALSE);
 
 	// Initializing ARtagLocalizer
 	if (ar.initARtagPose(320, 240, 180.f) != 0)
 	{
-		cerr << "Failed to init ARtagLocalizer!\n";
-		return -1;
+		debugMsg(__func__, "Failed to init ARtagLocalizer!");
+		pthread_exit(NULL);
 	}
 	else
 	{
-		cout << "ARtagLocalizer init successfully!\n";
+		debugMsg(__func__, "ARtagLocalizer init successfully.");
 	}
 
 	//configuring pipeline parameters string
@@ -193,58 +192,58 @@ void* StreamARtagVideo(void* arg)
 	if (res < 0)
 	{
 		g_printerr("Error configuring pipeline1's string\n");
-		return -1;
+		pthread_exit(NULL);
 	}
 
 	res = sprintf(pipeline2_str, "appsrc name=\"%s\" ! queue ! ffmpegcolorspace ! video/x-raw-rgb, width=%d, height=%d ! ximagesink", app_src_name, IMG_width, IMG_height );
 	if (res < 0)
 	{
 		g_printerr("Error configuring pipeline2's string \n");
-		return -1;
+		pthread_exit(NULL);
 	}
 	
 	//debugging
-	g_print("%s\n",pipeline1_str);
+	//g_print("%s\n",pipeline1_str);
 	//creating pipeline1
 	pipeline1 = gst_parse_launch(pipeline1_str, &error);
 
 	if (error)
 	{
 		g_printerr("Error [%s]\n",error->message);
-		return -1;
+		pthread_exit(NULL);
 	}
 
 	//debugging
-	g_print("%s\n",pipeline2_str);
+	//g_print("%s\n",pipeline2_str);
 	//creating pipeline2
 	pipeline2 = gst_parse_launch(pipeline2_str, &error);
 
 	if (error)
 	{
 		g_printerr("Error [%s]\n",error->message);
-		return -1;
+		pthread_exit(NULL);
 	}
 
 	if (!gst_bin_get_by_name( GST_BIN(pipeline1), app_sink_name))
 	{
 		g_printerr("Error creating app-sink\n");
-		return -1;
+		pthread_exit(NULL);
 	}
 
 	if (!gst_bin_get_by_name( GST_BIN(pipeline2), app_src_name))
 	{
 		g_printerr("error creating app-src\n");
-		return -1;
+		pthread_exit(NULL);
 	}
 
 	// Adding msg handler to Pipeline1
-	g_print("Adding msg handler to %s\n", gst_element_get_name(pipeline1));
+	//g_print("Adding msg handler to %s\n", gst_element_get_name(pipeline1));
 	bus = gst_pipeline_get_bus( GST_PIPELINE(pipeline1) );
 	gst_bus_add_watch(bus, bus_call, gst_element_get_name(pipeline1));
 	gst_object_unref(bus);
 
 	// Adding msg handler to Pipeline1
-	g_print("Adding msg handler to %s\n",gst_element_get_name(pipeline2));
+	//g_print("Adding msg handler to %s\n",gst_element_get_name(pipeline2));
 	bus = gst_pipeline_get_bus( GST_PIPELINE(pipeline2) );
 	gst_bus_add_watch(bus, bus_call, gst_element_get_name(pipeline2));
 	gst_object_unref(bus);
@@ -256,28 +255,29 @@ void* StreamARtagVideo(void* arg)
 	gst_app_sink_set_callbacks( (GstAppSink*) gst_bin_get_by_name(GST_BIN(pipeline1), app_sink_name), &callbacks, NULL, NULL);
 
 	//Set the pipeline to "playing" state
-	g_print("Setting pipeline1's state to \"playing\".\n");
+	//g_print("Setting pipeline1's state to \"playing\".\n");
 	gst_element_set_state(pipeline1, GST_STATE_PLAYING);
 
 	//Set the pipeline2 to "playing" state
-	g_print("Setting pipeline2's state to \"playing\".\n");
+	//g_print("Setting pipeline2's state to \"playing\".\n");
 	gst_element_set_state(pipeline2, GST_STATE_PLAYING);
 
 	// Iterate
-	g_print("Running...\n");
+	//g_print("Running...\n");
+	debugMsg(__func__, "Running ARtag detection.");
 	g_main_loop_run(loop);
 
 	// Out of the main loop, clean up nicely
-	g_print("Stopping playback - pipeline1\n");
+	//g_print("Stopping playback - pipeline1\n");
 	gst_element_set_state(pipeline1, GST_STATE_NULL);
 
-	g_print("Stopping playback - pipeline2\n");
+	//g_print("Stopping playback - pipeline2\n");
 	gst_element_set_state(pipeline2, GST_STATE_NULL);
 
-	g_print("Deleting pipeline1.\n");
+	//g_print("Deleting pipeline1.\n");
 	gst_object_unref( GST_OBJECT(pipeline1) );
 
-	g_print("Deleting pipeline2.\n");
+	//g_print("Deleting pipeline2.\n");
 	gst_object_unref( GST_OBJECT(pipeline2) );
 
 	//deleting image
@@ -287,7 +287,7 @@ void* StreamARtagVideo(void* arg)
 	//unref mainloop
 	g_main_loop_unref(loop);
 
-	return 0;
+	pthread_exit(NULL);
 }
 
 void HandleControls()
@@ -302,7 +302,7 @@ void* StreamSensorData(void* arg)
 	isInit = true;
 	pthread_t artagThread;
 	printf("ARtag Thread: %d.\n", 
-		pthread_create(&artagThread, NULL, StreamARtagVideo, NULL);
+		pthread_create(&artagThread, NULL, StreamARtagVideo, NULL));
 	while(1)
 	{
 		pthread_mutex_lock( &endMutex );
@@ -322,6 +322,7 @@ void* StreamSensorData(void* arg)
 	}
 	debugMsg(__func__, "End of streaming sensor data");
 	isInit = false;
+	pthread_exit(NULL);
 }
 void MakeConnection(Packet & packet)
 {
@@ -438,6 +439,7 @@ int main(int argc, char *argv[])
 	{
 		showDebugMsg = (strcmp(argv[2],"hideDebug") == 0)?false:showDebugMsg;
 	}
+
 
 	pthread_t listenerThread;
 	pthread_cond_init(&endCondition, NULL);
