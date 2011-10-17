@@ -1,5 +1,5 @@
 #ifndef ARTAGSTREAM_H
-#def ARTAGSTREAM_H
+#define ARTAGSTREAM_H
 
 #include <gst/gst.h>
 #include <gst/app/gstappsink.h>
@@ -15,15 +15,14 @@ class ARtagStream
 {
 	pthread_cond_t *imgReadyCond;
 	pthread_mutex_t *imgReadyMutex;
-	uchar * IMG_data;
+	unsigned char * IMG_data;
 			
-	GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data);
 	int Run(void);
 	
 public:
 	ARtagStream(pthread_cond_t * cond, pthread_mutex_t * mutex);
 	~ARtagStream(void);
 	
-	uchar* getData(void);
+	unsigned char* getData(void);
 };
 #endif

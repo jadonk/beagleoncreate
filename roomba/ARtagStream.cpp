@@ -1,4 +1,5 @@
 #include "ARtagStream.h"
+#include <stdio.h>
 
 static GMainLoop *loop       = NULL;
 static GstElement *pipeline1 = NULL;
@@ -13,18 +14,18 @@ static const char app_sink_name[] = "app-sink_01";
 static int IMG_width = 320;
 static int IMG_height = 240;
 
-ARtagStream(pthread_cond_t *cond, pthread_mutex_t *mutex)
-imgReadyCond(cond), imgReadyMutex(mutex)
+GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data);
+ARtagStream::ARtagStream(pthread_cond_t *cond, pthread_mutex_t *mutex)
+	: imgReadyCond(cond), imgReadyMutex(mutex)
+{
+}
+
+ARtagStream::~ARtagStream()
 {
 
 }
 
-~ARtagStream()
-{
-
-}
-
-uchar* ARtagStream::getData()
+unsigned char* ARtagStream::getData()
 {
 	return IMG_data;
 }
@@ -33,7 +34,6 @@ int ARtagStream::Run()
 {
 	// GStreamer stuff...
 	GError *error = NULL;
-	GstBus *bus = NULL;
 	GstAppSinkCallbacks callbacks;
 	gchar pipeline1_str[256];
 	gchar pipeline2_str[256];
@@ -90,18 +90,14 @@ int ARtagStream::Run()
 	return 0;
 }
 
-GstFlowReturn ARtagStream::new_buffer (GstAppSink *app_sink, gpointer user_data)
+GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data)
 {
 	GstBuffer *buffer = gst_app_sink_pull_buffer( (GstAppSink*) gst_bin_get_by_name( GST_BIN(pipeline1), app_sink_name));
-	pthread_mutex_lock(imgReadyMutex);
+	pthread_mutex_lock(this.imgReadyMutex);
 	// copies AppSink buffer data to the uchar vector of IplImage */
 	memcpy(IMG_data, GST_BUFFER_DATA(buffer), GST_BUFFER_SIZE(buffer));
-	pthread_mutex_unlock(imgReadyMutex);
-	pthread_cond_signal(imgReadyCond);
-	
-	memcpy(GST_BUFFER_DATA(buffer),IMG_data, GST_BUFFER_SIZE(buffer));
-	//pushes the buffer to AppSrc, it takes the ownership of the buffer. you do not need to unref
-	gst_app_src_push_buffer( GST_APP_SRC( gst_bin_get_by_name(GST_BIN(pipeline2),app_src_name)) , buffer);
+	pthread_mutex_unlock(this.imgReadyMutex);
+	pthread_cond_signal(this.imgReadyCond);
 
 	return GST_FLOW_OK;
 }

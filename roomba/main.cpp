@@ -31,7 +31,7 @@ void debugMsg(const char *func, const char *msg)
 
 void HandleControls()
 {
-	
+	debugMsg(__func__, "Sending control is not yet implemented!");	
 }
 void* StreamSensorData(void* arg)
 {
