@@ -41,12 +41,12 @@ ARtagLocalizer::~ARtagLocalizer()
 int ARtagLocalizer::initARtagPose(int width, int height, float markerWidth, float x_offset, float y_offset, float yaw_offset, float ffactor)
 {
 	// create a tracker that does:
-    //  - 6x6 sized marker images
-    //  - samples at a maximum of 6x6
-    //  - works with luminance (gray) images
-    //  - can load a maximum of 1 pattern
-    //  - can detect a maximum of 8 patterns in one image
-    tracker = new ARToolKitPlus::TrackerSingleMarker(width,height);//<6,6,6, 1, 8>(width,height);
+    	//  - 6x6 sized marker images
+    	//  - samples at a maximum of 6x6
+	//  - works with luminance (gray) images
+	//  - can load a maximum of 1 pattern
+	//  - can detect a maximum of 8 patterns in one image
+    	tracker = new ARToolKitPlus::TrackerSingleMarker(width,height);//<6,6,6, 1, 8>(width,height);
 	imgwidth = width;
 	imgheight = height;
 	patternCenter_[0] = patternCenter_[1] = 0.0;
@@ -66,26 +66,26 @@ int ARtagLocalizer::initARtagPose(int width, int height, float markerWidth, floa
 	//printf("tracker init\n");
 	patternWidth_ = markerWidth;
 	// define size of the marker
-    tracker->setPatternWidth(patternWidth_);
+    	tracker->setPatternWidth(patternWidth_);
 
 	// the marker in the BCH test image has a thin border...
 	tracker->setBorderWidth(THIN_PATTERN_BORDER);
 
-    // set a threshold. alternatively we could also activate automatic thresholding
-    tracker->setThreshold(100);
+    	// set a threshold. alternatively we could also activate automatic thresholding
+    	tracker->setThreshold(100);
 
-    // let's use lookup-table undistortion for high-speed
-    // note: LUT only works with images up to 1024x1024
-    tracker->setUndistortionMode(ARToolKitPlus::UNDIST_LUT);
+    	// let's use lookup-table undistortion for high-speed
+    	// note: LUT only works with images up to 1024x1024
+    	tracker->setUndistortionMode(ARToolKitPlus::UNDIST_LUT);
 
-    // RPP is more robust than ARToolKit's standard pose estimator but uses more CPU resource
+    	// RPP is more robust than ARToolKit's standard pose estimator but uses more CPU resource
 	// so using standard pose estimator instead
-//    tracker->setPoseEstimator(ARToolKitPlus::POSE_ESTIMATOR_ORIGINAL);
-	tracker->setPoseEstimator(ARToolKitPlus::POSE_ESTIMATOR_RPP);
+    	tracker->setPoseEstimator(ARToolKitPlus::POSE_ESTIMATOR_ORIGINAL);
+	//tracker->setPoseEstimator(ARToolKitPlus::POSE_ESTIMATOR_RPP);
 
-    // switch to simple ID based markers
-    // use the tool in tools/IdPatGen to generate markers
-    tracker->setMarkerMode(useBCH ? ARToolKitPlus::MARKER_ID_BCH : ARToolKitPlus::MARKER_ID_SIMPLE);
+    	// switch to simple ID based markers
+    	// use the tool in tools/IdPatGen to generate markers
+    	tracker->setMarkerMode(useBCH ? ARToolKitPlus::MARKER_ID_BCH : ARToolKitPlus::MARKER_ID_SIMPLE);
 	//printf("finished init\n");
 	init = true;
 	return 0;
@@ -115,6 +115,7 @@ bool ARtagLocalizer::getARtagPose(IplImage* src, IplImage* dst, int camID)
 	{
 		return false;
 	}
+	bool foundAny = false;
 
 	mytag.clear();
 
@@ -140,7 +141,8 @@ bool ARtagLocalizer::getARtagPose(IplImage* src, IplImage* dst, int camID)
 			printf("Id: %d\t Conf: %.2f\n", markers[m].id, markers[m].cf);
 			printf("x: %.2f \t y: %.2f \t z: %.2f \t yaw: %.2f\n", x,y,z,yaw);
 			printf("\n");
-
+			
+			foundAny = true;
 			char str[30];
 			sprintf(str,"%d",markers[m].id);
 			cvPutText (dst,str,cvPoint( markers[m].pos[0]+25,markers[m].pos[1]+10),&cvFont(3,3),cvScalar(0,0,255));
@@ -154,7 +156,6 @@ bool ARtagLocalizer::getARtagPose(IplImage* src, IplImage* dst, int camID)
 			// save artag struct for access later
 			if (markers[m].id >= 0 && markers[m].id < 50 && !allStop)
 			{
-//				EnterCriticalSection(&tags_mutex);		
 				ARtag * ar = tags[markers[m].id];
 				ar->setId(markers[m].id);
 				ar->setPose(&pose);
@@ -166,13 +167,12 @@ bool ARtagLocalizer::getARtagPose(IplImage* src, IplImage* dst, int camID)
 				mt.setPose(&pose);
 				mt.setPoseAge(0);
 				mt.setCamId(camID);
-//				LeaveCriticalSection(&tags_mutex);
 				mytag.push_back(mt);
 			}
 		}
 	}
 
-	return true;
+	return foundAny;
 }
 
 ARtag * ARtagLocalizer::getARtag(int index)

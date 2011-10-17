@@ -5,7 +5,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-#define MAXPACKETSIZE 1024
+#define MAXPACKETSIZE 5000 
 enum PacketType
 {
 	INIT = 1,
@@ -47,6 +47,13 @@ struct Packet
 			float yaw;
 			float timestamp;
 		}data;
+
+		struct
+		{
+			int width;
+			int height;
+			char data[19200];
+		}image;
 
 		struct
 		{

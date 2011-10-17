@@ -43,6 +43,9 @@ static IplImage * gray;
 static uchar * IMG_data;
 static ARtagLocalizer ar;
 
+int remoteSock;
+struct sockaddr_in remote;
+
 void error(const char *msg)
 {
 	perror(msg);
@@ -52,6 +55,17 @@ void error(const char *msg)
 void debugMsg(const char *func, const char *msg)
 {
 	if (showDebugMsg)	printf("[%s	] %s\n", func, msg);
+}
+
+void SendImage(IplImage * image)
+{
+	Packet packet;
+	packet.type = DATA;
+	packet.u.image.width = image->width;
+	packet.u.image.height = image->height;
+	memcpy(&packet.u.image.data, image->imageData, sizeof(packet.u.image.data));
+
+	if (sendto(remoteSock, (unsigned char*)&packet, sizeof(packet), 0, (const struct sockaddr *)&remote, sizeof(struct sockaddr_in)) < 0) error("sendto");
 }
 
 GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data)
@@ -70,16 +84,21 @@ GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data)
 	//detect a image ...
 	if(!ar.getARtagPose(gray, img, 0))
 	{
-		cout << "No artag in the view.\n";
+//		debugMsg(__func__, "No artag in the view.");
 	}
-	
+	IplImage* grayrz = cvCreateImage(cvSize(160,120), IPL_DEPTH_8U, 1);
+	cvResize(gray, grayrz);
+	SendImage(grayrz);
+	cvReleaseImage(&grayrz);
+
+	gst_object_unref(buffer);
 	// Image buffer is RGB, but OpenCV handles it as BGR, so channels R and B must be swapped */
-	cvConvertImage(img,img,CV_CVTIMG_SWAP_RB);
+	/*cvConvertImage(img,img,CV_CVTIMG_SWAP_RB);
 	//cvCvtColor(img,img,CV_RGB2BGR);
-	
+		
 	memcpy(GST_BUFFER_DATA(buffer),IMG_data, GST_BUFFER_SIZE(buffer));
 	//pushes the buffer to AppSrc, it takes the ownership of the buffer. you do not need to unref
-	gst_app_src_push_buffer( GST_APP_SRC( gst_bin_get_by_name(GST_BIN(pipeline2),app_src_name)) , buffer);
+	gst_app_src_push_buffer( GST_APP_SRC( gst_bin_get_by_name(GST_BIN(pipeline2),app_src_name)) , buffer);*/
 	
 	return GST_FLOW_OK;
 }
@@ -331,6 +350,13 @@ void MakeConnection(Packet & packet)
 		debugMsg(__func__, "Connection is already occupied.");
 		return;
 	}
+	remoteSock = socket(AF_INET, SOCK_DGRAM, 0);
+	if (remoteSock < 0) error("socket");
+
+	remote.sin_family = AF_INET;
+	remote.sin_addr.s_addr = packet.addr.s_addr;
+	remote.sin_port = htons(8855);
+
 	connectedHost = packet.addr.s_addr;
 	pthread_t sensorThread;
 	printf("Sensor Thread: %d.\n", 
