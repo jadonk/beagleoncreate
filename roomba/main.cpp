@@ -336,9 +336,15 @@ void* StreamARtagVideo(void* arg)
 	pthread_exit(NULL);
 }
 
-void HandleControls()
+void HandleControls(Packet & packet)
 {
 	debugMsg(__func__, "Sending control is not yet implemented!");	
+	if (packet.u.ctrl.data[0] == 1)
+		printf("pickup \n");
+	else if (packet.u.ctrl.data[0] == 0)
+		printf("drop \n");
+
+	printf("packet data: %d\n", packet.u.ctrl.data[0]);
 }
 void* StreamSensorData(void* arg)
 {
@@ -417,7 +423,7 @@ void ProcessPackets(Packet & packet)
 			debugMsg(__func__, "======= packet received, type: CTRL");
 			if (connectedHost == packet.addr.s_addr)
 			{
-				HandleControls();
+				HandleControls(packet);
 			}
 			else
 			{
