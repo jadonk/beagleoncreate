@@ -72,7 +72,7 @@ function varargout = gui_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 global videoON;
-sendpacket('INIT');
+sendpacket(PacketType.INIT);
 while(1)
     if (videoON == 1)
         [img size] = streamCreateVideo();
@@ -96,7 +96,7 @@ function btnINIT_Callback(hObject, eventdata, handles)
 % hObject    handle to btnINIT (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-sendpacket('INIT');
+sendpacket(PacketType.INIT);
 
 
 
@@ -105,7 +105,7 @@ function btnEND_Callback(hObject, eventdata, handles)
 % hObject    handle to btnEND (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-sendpacket('END');
+sendpacket(PacketType.END);
 global videoON;
 videoON = 0;
 
@@ -116,7 +116,7 @@ function btnSHUTDOWN_Callback(hObject, eventdata, handles)
 % hObject    handle to btnSHUTDOWN (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-sendpacket('SHUTDOWN');
+sendpacket(PacketType.SHUTDOWN);
 global videoON;
 videoON = 0;
 
@@ -139,5 +139,5 @@ function btnCTRL_Callback(hObject, eventdata, handles)
 % hObject    handle to btnCTRL (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-sendpacket('CTRL');
+sendpacket(PacketType.CTRL);
 
