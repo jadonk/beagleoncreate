@@ -338,11 +338,22 @@ void* StreamARtagVideo(void* arg)
 
 void HandleControls(Packet & packet)
 {
-	debugMsg(__func__, "Sending control is not yet implemented!");	
+	//debugMsg(__func__, "Sending control is not yet implemented!");	
 	if (packet.u.ctrl.data[0] == 1)
+	{
 		printf("pickup \n");
+		system("bash pickup.sh");
+	}
 	else if (packet.u.ctrl.data[0] == 0)
+	{
 		printf("drop \n");
+		system("bash drop.sh");
+	}
+	else if (packet.u.ctrl.data[0] = 2)
+	{
+		printf("resetarm \n");
+		system("bash resetarm.sh");
+	}
 
 	printf("packet data: %d\n", packet.u.ctrl.data[0]);
 }
