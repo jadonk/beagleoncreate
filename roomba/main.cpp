@@ -9,6 +9,9 @@
 #include <iostream>
 #include <pthread.h>
 #include "Packet.h"
+#include <termios.h>
+#include <fcntl.h>
+#include <poll.h>
 
 #include <gst/gst.h>
 #include <gst/app/gstappsink.h>
@@ -19,6 +22,7 @@
 
 #include "ARtagLocalizer.h"
 
+#define CREATE_PORT 8888
 #define VIDEO_PORT 8855
 #define ARTAG_PORT 8844
 
@@ -349,7 +353,7 @@ void HandleControls(Packet & packet)
 		printf("drop \n");
 		system("bash drop.sh");
 	}
-	else if (packet.u.ctrl.data[0] = 2)
+	else if (packet.u.ctrl.data[0] == 2)
 	{
 		printf("resetarm \n");
 		system("bash resetarm.sh");
@@ -387,6 +391,157 @@ void* StreamSensorData(void* arg)
 	isInit = false;
 	pthread_exit(NULL);
 }
+
+int InitCreateSerial()
+{
+	debugMsg(__func__, "Entered");
+	int fd;	// file description for the serial port
+
+	fd = open("/dev/ttyUSB0", O_RDWR | O_NOCTTY | O_NDELAY);
+
+	if(fd == -1) // if open is unsuccessful
+	{
+		debugMsg(__func__, "Unable to open /dev/ttyUSB0.");
+		return -1;
+	}
+	else
+	{
+		fcntl(fd, F_SETFL, 0);
+		debugMsg(__func__, "create serial port opened.");
+	}
+
+	// configure port
+	struct termios portSettings;
+	if (cfsetispeed(&portSettings, B57600) != 0)
+		debugMsg(__func__, "Failed setting cfsetispeed");
+	if (cfsetospeed(&portSettings, B57600) != 0)
+		debugMsg(__func__, "Failed setting cfsetospeed");
+
+	// set no parity, stop bits, databits
+	portSettings.c_cflag &= ~PARENB;
+	portSettings.c_cflag &= ~CSTOPB;
+	portSettings.c_cflag &= ~CSIZE;
+	portSettings.c_cflag |= CS8;
+
+	if (tcsetattr(fd, TCSANOW, &portSettings) != 0)
+		debugMsg(__func__, "Failed pushing portSettings");
+	return (fd);
+}
+
+void CloseCreateSerial(int fd)
+{
+	debugMsg(__func__, "Entered");
+	close(fd);
+}
+
+void SendSerialToCreate(int fd, char* buf, int bufLength)
+{
+	debugMsg(__func__, "Entered");
+	write(fd, buf, bufLength);
+	printf("bufLength: %d\n", bufLength);
+	for (int i = 0; i < bufLength; i++)
+	{
+		printf("%i ", int(buf[i]));
+	}
+	printf("\n");
+}
+
+void* CreateCallbackHandler(void* arg)
+{
+	int fd = *((int*) arg);
+	printf("fd in callback is %d\n", fd);
+	struct timeval timeout;
+	char buf[MAXPACKETSIZE];
+	int bufLength;
+	struct pollfd fdset[1];
+	// initialize the timeout structure
+	timeout.tv_sec = 10;
+	timeout.tv_usec = 0;
+	fd_set rdfs;
+	int ret;
+
+	while(1)
+	{
+		if(isEnding)
+			break;
+
+		memset((void*) fdset, 1, sizeof(fdset));
+		fdset[0].fd = fd;
+		fdset[0].events = POLLPRI;
+
+		ret = poll(fdset, 1, 10000000);
+		//ret = select(fd + 1, &rdfs, NULL, NULL, &timeout);
+
+		// check if an error has occured
+		if (ret < 0)
+		{
+			debugMsg(__func__, "error in select");
+		}
+		else if (ret == 0)
+		{
+			debugMsg(__func__, "timeout");
+		}
+		else if (fdset[0].revents & POLLERR)
+		{
+			bufLength = read(fd, buf, MAXPACKETSIZE);
+			fflush(stdout);
+			printf("bufLength received is: %d\n", bufLength);
+		}
+	}
+	return 0;
+}
+
+void* CreateSerialHandler(void* arg)
+{
+	debugMsg(__func__, "Entered CreateSerialHandler");
+
+	int sock, bufLength;
+	socklen_t serverlen, fromlen;
+	struct sockaddr_in server;
+	struct sockaddr_in from;
+	char buf[MAXPACKETSIZE];
+
+	// initialize udp listener
+	sock = socket(AF_INET, SOCK_DGRAM, 0);
+	if (sock < 0) error("Opening socket");
+	serverlen = sizeof(server);
+	bzero(&server, serverlen);
+	server.sin_family = AF_INET;
+	server.sin_addr.s_addr = INADDR_ANY;
+	server.sin_port = htons(CREATE_PORT);
+	if (bind(sock, (struct sockaddr *)&server, serverlen) < 0) error("binding");
+	fromlen = sizeof(struct sockaddr_in);
+
+	// initialize Create serial communication
+	int fd = InitCreateSerial();
+	printf("fd created is %d\n", fd);
+	pthread_t createCallbackThread;
+	if (fd != -1)
+	{
+		printf("iRobot Create Callback Thread: %d.\n", 
+			pthread_create(&createCallbackThread, NULL, CreateCallbackHandler, (void*)&fd));
+	}
+	debugMsg(__func__, "Ready to listen to Create message ...");
+	while(1)
+	{
+		if (isEnding)
+			break;
+
+		bzero(&buf, sizeof(buf));
+		bufLength = recvfrom(sock, buf, MAXPACKETSIZE, 
+				0, (struct sockaddr *)&from, &fromlen);
+		if (bufLength < 0) error("recvfrom");
+
+		if (connectedHost != from.sin_addr.s_addr)
+			continue;
+
+		SendSerialToCreate(fd, buf, bufLength);
+	}
+	CloseCreateSerial(fd);
+
+	debugMsg(__func__, "Ending CreateSerialHandler");
+	return 0;
+}
 void MakeConnection(Packet & packet)
 {
 	if (isInit)
@@ -406,6 +561,11 @@ void MakeConnection(Packet & packet)
 	remoteARtag.sin_port = htons(ARTAG_PORT);
 
 	connectedHost = packet.addr.s_addr;
+	
+	pthread_t createSerialThread;
+	printf("iRobot Create Thread: %d.\n",
+		pthread_create(&createSerialThread, NULL, CreateSerialHandler, NULL));
+
 	pthread_t sensorThread;
 	printf("Sensor Thread: %d.\n", 
 		pthread_create(&sensorThread, NULL, StreamSensorData, (void*)&packet.addr.s_addr));
@@ -446,6 +606,9 @@ void ProcessPackets(Packet & packet)
 			break;
 		case ERROR:
 			debugMsg(__func__, "======= packet received, type: ERROR");
+			break;
+		case CREATE:
+			debugMsg(__func__, "======= packet received, type: CREATE");
 			break;
 		case SHUTDOWN:
 			debugMsg(__func__, "======= packet received, type: SHUTDOWN");
