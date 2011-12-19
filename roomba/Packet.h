@@ -13,7 +13,6 @@ enum PacketType
 	CTRL,
 	DATA,
 	ERROR,
-	CREATE,
 	SHUTDOWN,
 	UNKNOWN
 };
@@ -61,11 +60,6 @@ struct Packet
 			int errorCode;
 			char data[256];
 		}error;
-
-		struct
-		{
-			char data[256];
-		}create;
 
 		struct
 		{
