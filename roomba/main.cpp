@@ -53,6 +53,7 @@ static ARtagLocalizer ar;
 int remoteSock;
 struct sockaddr_in remoteVideo;
 struct sockaddr_in remoteARtag;
+struct sockaddr_in remoteCreate;
 
 void error(const char *msg)
 {
@@ -455,7 +456,6 @@ void* CreateCallbackHandler(void* arg)
 	int            max_fd;
 	fd_set         input;
 	struct timeval timeout;
-	char buf[256];
 
 	while(1)
 	{
@@ -483,6 +483,7 @@ void* CreateCallbackHandler(void* arg)
 			if (FD_ISSET(fd, &input))
 			{
 				bufLength = read(fd, buf, MAXPACKETSIZE);
+				if (sendto(remoteSock, buf, bufLength, 0, (const struct sockaddr *) &remoteCreate, sizeof(struct sockaddr_in)) < 0) error("sendto");
 				printf("%c", buf[0]);
 			}
 		}
@@ -560,6 +561,10 @@ void MakeConnection(Packet & packet)
 	remoteARtag.sin_addr.s_addr = packet.addr.s_addr;
 	remoteARtag.sin_port = htons(ARTAG_PORT);
 
+	remoteCreate.sin_family = AF_INET;
+	remoteCreate.sin_addr.s_addr = packet.addr.s_addr;
+	remoteCreate.sin_port = htons(CREATE_PORT);
+
 	connectedHost = packet.addr.s_addr;
 	
 	pthread_t createSerialThread;
@@ -606,9 +611,6 @@ void ProcessPackets(Packet & packet)
 			break;
 		case ERROR:
 			debugMsg(__func__, "======= packet received, type: ERROR");
-			break;
-		case CREATE:
-			debugMsg(__func__, "======= packet received, type: CREATE");
 			break;
 		case SHUTDOWN:
 			debugMsg(__func__, "======= packet received, type: SHUTDOWN");
