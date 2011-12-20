@@ -449,44 +449,44 @@ void SendSerialToCreate(int fd, char* buf, int bufLength)
 void* CreateCallbackHandler(void* arg)
 {
 	int fd = *((int*) arg);
-	printf("fd in callback is %d\n", fd);
-	struct timeval timeout;
 	char buf[MAXPACKETSIZE];
-	int bufLength;
-	struct pollfd fdset[1];
-	// initialize the timeout structure
-	timeout.tv_sec = 10;
-	timeout.tv_usec = 0;
-	fd_set rdfs;
 	int ret;
+	int bufLength;
+	int            max_fd;
+	fd_set         input;
+	struct timeval timeout;
+	char buf[256];
 
 	while(1)
 	{
 		if(isEnding)
 			break;
+			
+		/* Initialize the input set */
+		FD_ZERO(&input);
+		FD_SET(fd, &input);
+		max_fd = fd + 1;
+		
+		/* Initialize the timeout structure */
+		timeout.tv_sec  = 10;
+		timeout.tv_usec = 0;
 
-		memset((void*) fdset, 1, sizeof(fdset));
-		fdset[0].fd = fd;
-		fdset[0].events = POLLPRI;
+		/* Do the select */
+		ret = select(max_fd, &input, NULL, NULL, &timeout);
 
-		ret = poll(fdset, 1, 10000000);
-		//ret = select(fd + 1, &rdfs, NULL, NULL, &timeout);
-
-		// check if an error has occured
+		/* See if there was an error */
 		if (ret < 0)
+		  debugMsg(__func__, "select failed");
+		else if (ret != 0)
 		{
-			debugMsg(__func__, "error in select");
+			/* We have input */
+			if (FD_ISSET(fd, &input))
+			{
+				bufLength = read(fd, buf, MAXPACKETSIZE);
+				printf("%c", buf[0]);
+			}
 		}
-		else if (ret == 0)
-		{
-			debugMsg(__func__, "timeout");
-		}
-		else if (fdset[0].revents & POLLERR)
-		{
-			bufLength = read(fd, buf, MAXPACKETSIZE);
-			fflush(stdout);
-			printf("bufLength received is: %d\n", bufLength);
-		}
+		fflush(stdout);
 	}
 	return 0;
 }
