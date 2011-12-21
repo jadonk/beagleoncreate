@@ -11,11 +11,13 @@ CPP	= g++
 
 SRCS 	= main.cpp \
 	  ARtag.cpp \
-	  ARtagLocalizer.cpp 
+	  ARtagLocalizer.cpp \
+	  CreateSerial.cpp
 
 OBJS 	= main.o \
 	  ARtag.o \
-	  ARtagLocalizer.o 
+	  ARtagLocalizer.o \
+	  CreateSerial.o
 
 EXECUTABLE = main
 
@@ -32,8 +34,11 @@ ARtag.o	: ARtag.h ARtag.cpp
 
 ARtagLocalizer.o : ARtagLocalizer.h ARtag.h ARtagLocalizer.cpp
 	$(CPP) $(CFLAGS) -c $^
+	
+CreateSerial.o : CreateSerial.h CreateSerial.cpp
+	$(CPP) $(CFLAGS) -c $^
 
-$(OBJS)	: Packet.h ARtag.h ARtagLocalizer.h 
+$(OBJS)	: Packet.h ARtag.h ARtagLocalizer.h CreateSerial.h
 
 clean	:
 	rm -rf main *.o
