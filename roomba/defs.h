@@ -1,0 +1,3 @@
+#define CREATE_PORT 8888
+#define VIDEO_PORT 8855
+#define ARTAG_PORT 8844

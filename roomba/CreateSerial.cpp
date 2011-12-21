@@ -1,4 +1,15 @@
 #include "CreateSerial.h"
+#include "defs.h"
+#include "Packet.h"
+#include "thread.h"
+#include "CreateSerialReceiver.h"
+
+CreateSerial::CreateSerial(unsigned long connectedHost, int remoteSock, struct sockaddr_in * remoteCreate)
+{
+	_remoteSock = remoteSock;
+	_remoteCreate = remoteCreate;
+	_connectedHost = connectedHost;
+}
 
 int CreateSerial::InitCreateSerial()
 {
@@ -54,7 +65,7 @@ void CreateSerial::SendSerialToCreate(int fd, char* buf, int bufLength)
 	printf("\n");
 }
 
-void* CreateSerial::CreateCallbackHandler(void* arg)
+int CreateSerial::CreateCallbackHandler(void* arg)
 {
 	int fd = *((int*) arg);
 	char buf[MAXPACKETSIZE];
@@ -90,7 +101,7 @@ void* CreateSerial::CreateCallbackHandler(void* arg)
 			if (FD_ISSET(fd, &input))
 			{
 				bufLength = read(fd, buf, MAXPACKETSIZE);
-				if (sendto(remoteSock, buf, bufLength, 0, (const struct sockaddr *) &remoteCreate, sizeof(struct sockaddr_in)) < 0) error("sendto");
+				if (sendto(_remoteSock, buf, bufLength, 0, (const struct sockaddr *) _remoteCreate, sizeof(struct sockaddr_in)) < 0) error("sendto");
 				printf("%c", buf[0]);
 			}
 		}
@@ -99,7 +110,7 @@ void* CreateSerial::CreateCallbackHandler(void* arg)
 	return 0;
 }
 
-void* CreateSerial::CreateSerialHandler(void* arg)
+int CreateSerial::CreateSerialHandler(void* arg)
 {
 	debugMsg(__func__, "Entered CreateSerialHandler");
 
@@ -123,11 +134,14 @@ void* CreateSerial::CreateSerialHandler(void* arg)
 	// initialize Create serial communication
 	int fd = InitCreateSerial();
 	printf("fd created is %d\n", fd);
-	pthread_t createCallbackThread;
+//	pthread_t createCallbackThread;
 	if (fd != -1)
 	{
+		PThread* createCallback = new CreateSerialReceiver(fd, _remoteSock, _remoteCreate);
+
+/*
 		printf("iRobot Create Callback Thread: %d.\n", 
-			pthread_create(&createCallbackThread, NULL, CreateCallbackHandler, (void*)&fd));
+			pthread_create(&createCallbackThread, NULL, CreateCallbackHandler, (void*)&fd));*/
 	}
 	debugMsg(__func__, "Ready to listen to Create message ...");
 	while(1)
@@ -140,7 +154,7 @@ void* CreateSerial::CreateSerialHandler(void* arg)
 				0, (struct sockaddr *)&from, &fromlen);
 		if (bufLength < 0) error("recvfrom");
 
-		if (connectedHost != from.sin_addr.s_addr)
+		if (_connectedHost != from.sin_addr.s_addr)
 			continue;
 
 		SendSerialToCreate(fd, buf, bufLength);

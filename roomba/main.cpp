@@ -1,17 +1,7 @@
-#include <sys/types.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <netdb.h>
-#include <stdio.h>
-#include <iostream>
-#include <pthread.h>
+#include "all.h"
 #include "Packet.h"
-#include <termios.h>
-#include <fcntl.h>
-#include <poll.h>
+#include "defs.h"
+#include "thread.h"
 
 #include <gst/gst.h>
 #include <gst/app/gstappsink.h>
@@ -21,20 +11,17 @@
 #include "opencv/highgui.h"
 
 #include "ARtagLocalizer.h"
-
-#define CREATE_PORT 8888
-#define VIDEO_PORT 8855
-#define ARTAG_PORT 8844
+#include "CreateSerial.h"
 
 using namespace cv;
 using namespace std;
 
-bool showDebugMsg = true;
+static bool showDebugMsg = true;
 pthread_cond_t endCondition = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t endMutex = PTHREAD_MUTEX_INITIALIZER;
-bool isInit = false;
-bool isEnding = false;
-unsigned long connectedHost = 0;
+static bool isInit = false;
+static bool isEnding = false;
+static unsigned long connectedHost = 0;
 
 static GMainLoop *loop       = NULL;
 static GstElement *pipeline1 = NULL;
@@ -55,16 +42,7 @@ struct sockaddr_in remoteVideo;
 struct sockaddr_in remoteARtag;
 struct sockaddr_in remoteCreate;
 
-void error(const char *msg)
-{
-	perror(msg);
-	exit(0);
-}
-
-void debugMsg(const char *func, const char *msg)
-{
-	if (showDebugMsg)	printf("[%s	] %s\n", func, msg);
-}
+CreateSerial* createSerial;
 
 void SendImage(IplImage * image)
 {
@@ -393,6 +371,11 @@ void* StreamSensorData(void* arg)
 	pthread_exit(NULL);
 }
 
+void* CreateSerialHandler(void* arg)
+{
+	return (void*)createSerial->CreateSerialHandler(arg);
+}
+
 void MakeConnection(Packet & packet)
 {
 	if (isInit)
@@ -416,6 +399,8 @@ void MakeConnection(Packet & packet)
 	remoteCreate.sin_port = htons(CREATE_PORT);
 
 	connectedHost = packet.addr.s_addr;
+
+	createSerial = new CreateSerial(connectedHost, remoteSock, &remoteCreate);
 	
 	pthread_t createSerialThread;
 	printf("iRobot Create Thread: %d.\n",
