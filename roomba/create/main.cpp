@@ -11,6 +11,8 @@
 #include "Create.h"
 #include "Packet.h"
 
+#define BEAGLE_PORT 8866
+
 Create* create;
 
 void* CreateSerialListener(void* arg)
@@ -48,11 +50,11 @@ void StartListening(Packet & packet)
 int main(int argc, char *argv[])
 {
 	// loading input parameters
-	if (argc < 2)
+	/*if (argc < 2)
 	{
 		fprintf(stderr,"ERROR, no port provided\n");
 		exit(0);
-	}
+	}*/
 	
 	int sock, bufLength;
 	socklen_t serverlen, fromlen;
@@ -68,7 +70,7 @@ int main(int argc, char *argv[])
 	bzero(&server, serverlen);
 	server.sin_family = AF_INET;
 	server.sin_addr.s_addr = INADDR_ANY;
-	server.sin_port = htons(atoi((char*)argv+1));
+	server.sin_port = htons(BEAGLE_PORT);
 	if (bind(sock, (struct sockaddr *)&server, serverlen) < 0) 
 		printf("ERROR: binding\n");
 	fromlen = sizeof(struct sockaddr_in);
