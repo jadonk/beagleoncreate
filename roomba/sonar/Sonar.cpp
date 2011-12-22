@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <time.h>
 
-#include "Gpio.h"
+#include "Sonar.h"
 
 #define POLL_TIMEOUT 100
 #define SONAR_MEASURE_RATE 100000
@@ -54,7 +54,6 @@ void Sonar::DisplayMeasurement()
 			{
 				_maxDist = dist;
 			}
-			printf("nSecond %d\n", TimeDiff().tv_nsec);
 			printf("Time taken is: %fs\n", time);
 			printf("Dist is: %fm\t minDist: %fm\t maxDist: %fm\n", dist, _minDist, _maxDist);
 		}
@@ -63,11 +62,11 @@ void Sonar::DisplayMeasurement()
 
 void Sonar::StartPulse()
 {
-	_gpio->.SetValue(LOW);
+	_gpio->SetValue(LOW);
 	usleep(10);
-	_gpio->.SetValue(HIGH);
+	_gpio->SetValue(HIGH);
 	usleep(5);
-	_gpio->.SetValue(LOW);
+	_gpio->SetValue(LOW);
 }
 
 int Sonar::Run()

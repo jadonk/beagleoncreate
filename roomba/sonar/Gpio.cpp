@@ -13,7 +13,7 @@
 
 Gpio::Gpio(unsigned int pinNum, bool isOut)
 {
-	_curVal = 2;		// Make it out of range to force write if out pin
+	_curVal = UNKNOWNVAL;		// Make it out of range to force write if out pin
 	_fd = -1;				// Make it invalid to force initial open
 	_pinNum = pinNum;
 
@@ -100,10 +100,10 @@ int Gpio::SetValue(GpioVal value)
 		switch(value)
 		{
 			case HIGH:
-				write(fd, "1", 2);
+				write(_fd, "1", 2);
 				break;
 			case LOW:
-				write(fd, "0", 2);
+				write(_fd, "0", 2);
 				break;
 			default:
 				break;

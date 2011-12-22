@@ -2,6 +2,7 @@
 #define SONAR_H
 
 #include <time.h>
+#include "Gpio.h"
 
 class Sonar
 {
@@ -19,10 +20,10 @@ private:
 	struct timespec _risingTOI;
 	struct timespec _fallingTOI;
 	
-	void TimeDiff();
+	struct timespec TimeDiff();
 	void DisplayMeasurement();
 	void StartPulse();
 	
-}
+};
 
 #endif

@@ -6,16 +6,16 @@ GSTREAMER_CFLAGS=`pkg-config --cflags gstreamer-0.10 gstreamer-app-0.10`
 GSTREAMER_LFLAGS=`pkg-config --libs gstreamer-0.10 gstreamer-app-0.10`
 
 CFLAGS 	= -O2 -Wall $(OPENCV_CFLAGS) $(ARTKP_CFLAGS) $(GSTREAMER_CFLAGS)
-LDFLAGS = -L. -lpthread $(OPENCV_LFLAGS) $(ARTKP_LFLAGS) $(GSTREAMER_LFLAGS)
+LDFLAGS = -L. -lrt -lpthread $(OPENCV_LFLAGS) $(ARTKP_LFLAGS) $(GSTREAMER_LFLAGS)
 CPP	= g++
 
 SRCS 	= main.cpp \
-	  ARtag.cpp \
-	  ARtagLocalizer.cpp 
+	  Sonar.cpp \
+	  Gpio.cpp 
 
 OBJS 	= main.o \
-	  ARtag.o \
-	  ARtagLocalizer.o 
+	  Sonar.o \
+	  Gpio.o 
 
 EXECUTABLE = main
 
@@ -24,16 +24,16 @@ all	: $(EXECUTABLE)
 $(EXECUTABLE) : $(OBJS)
 	$(CPP) $(OBJS) $(LDFLAGS) -o $@ $*
 
-main.o	: main.cpp
+main.o	: Sonar.h main.cpp
 	$(CPP) $(CFLAGS) -c $^
 
-ARtag.o	: ARtag.h ARtag.cpp
+Sonar.o	: Gpio.h Sonar.h Sonar.cpp
 	$(CPP) $(CFLAGS) -c $^
 
-ARtagLocalizer.o : ARtagLocalizer.h ARtag.h ARtagLocalizer.cpp
+Gpio.o : Gpio.h Gpio.cpp
 	$(CPP) $(CFLAGS) -c $^
 
-$(OBJS)	: Packet.h ARtag.h ARtagLocalizer.h 
+$(OBJS)	: Gpio.h Sonar.h 
 
 clean	:
 	rm -rf main *.o

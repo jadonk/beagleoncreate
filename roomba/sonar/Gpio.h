@@ -6,7 +6,8 @@
 enum GpioVal
 { 
 	HIGH, 
-	LOW
+	LOW,
+	UNKNOWNVAL
 };
 
 enum GpioEdge
@@ -32,7 +33,7 @@ public:
 private:
 	bool _isOut;
 	int _fd;
-	unsigned int _curVal;
+	GpioVal _curVal;
 	unsigned int _pinNum;
 	
 	int Export();
