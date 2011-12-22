@@ -13,11 +13,12 @@
 #define CREATE_SERIAL_PORT "/dev/ttyUSB0"
 #define CREATE_SERIAL_BRATE B57600
 
-Create::Create(int sock, struct sockaddr * createPort)
+Create::Create(int sock, struct sockaddr * createPort, unsigned long connectedHost)
 {
 	_fd = -1;
 	_sock = sock;
 	_createPort = createPort;
+	_connectedHost = connectedHost;
 	isEnding = false;
 }
 
@@ -165,10 +166,10 @@ int Create::RunUDPListener()
 		bzero(&buf, sizeof(buf));
 		bufLength = recvfrom(sock, buf, MAXPACKETSIZE, 
 				0, (struct sockaddr *)&from, &fromlen);
-		if (bufLength < 0) error("recvfrom");
+		if (bufLength < 0) printf("ERROR: recvfrom\n");
 	
-		//if (connectedHost != from.sin_addr.s_addr)
-		//	continue;
+		if (_connectedHost != from.sin_addr.s_addr)
+			continue;
 
 		SendSerial(buf, bufLength);
 	}

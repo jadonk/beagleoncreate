@@ -9,7 +9,7 @@
 class Create
 {
 public:
-	Create();
+	Create(int sock, struct sockaddr * createPort, unsigned long connectedHost);
 	~Create();
 	
 	void CloseSerial();
@@ -25,6 +25,7 @@ private:
 	int _fd;
 	int _sock;
 	struct sockaddr * _createPort;
+	unsigned long _connectedHost;
 };
 
 #endif
