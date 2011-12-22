@@ -22,13 +22,13 @@ all	: $(EXECUTABLE)
 $(EXECUTABLE) : $(OBJS)
 	$(CPP) $(OBJS) $(LDFLAGS) -o $@ $*
 
-main.o	: Create.h main.cpp
+main.o	: Packet.h Create.h main.cpp
 	$(CPP) $(CFLAGS) -c $^
 
-Create.o : Create.h Create.cpp
+Create.o : Packet.h Create.h Create.cpp
 	$(CPP) $(CFLAGS) -c $^
 
-$(OBJS)	: Create.h
+$(OBJS)	: Packet.h Create.h
 
 clean	:
 	rm -rf main *.o
