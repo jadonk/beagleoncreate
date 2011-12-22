@@ -96,7 +96,7 @@ int Create::RunSerialListener()
 	
 	InitSerial();
 	
-	if (_fd = -1)
+	if (_fd == -1)
 	{
 		printf("ERROR: _fd is not initialized\n");
 		return -1;
@@ -125,9 +125,9 @@ int Create::RunSerialListener()
 		else if (ret != 0)
 		{
 			/* We have input */
-			if (FD_ISSET(fd, &input))
+			if (FD_ISSET(_fd, &input))
 			{
-				bufLength = read(fd, buf, MAXPACKETSIZE);
+				bufLength = read(_fd, buf, MAXPACKETSIZE);
 				if (sendto(_sock, buf, bufLength, 0, (const struct sockaddr *) _createPort, sizeof(struct sockaddr_in)) < 0) printf("ERROR: sendto\n");
 				printf("%c", buf[0]);
 			}
@@ -173,7 +173,7 @@ int Create::RunUDPListener()
 
 		SendSerial(buf, bufLength);
 	}
-	CloseSerial(fd);
+	CloseSerial();
 
 	printf("Ending RunUDPListener");
 	return 0;

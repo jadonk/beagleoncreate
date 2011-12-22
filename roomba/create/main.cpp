@@ -34,15 +34,15 @@ void StartListening(Packet & packet)
 	remoteCreate.sin_addr.s_addr = packet.addr.s_addr;
 	remoteCreate.sin_port = htons(CREATE_PORT);
 
-	create = new Create(remoteSock, &remoteCreate);
+	create = new Create(remoteSock, (struct sockaddr*) &remoteCreate, (unsigned long) packet.addr.s_addr);
 
 	pthread_t createSerialThread;
 	printf("iRobot Create SerialListner Thread: %d.\n", 
-		pthread_create(&createSerialThread, NULL, CreateSerialListener, NULL);
+		pthread_create(&createSerialThread, NULL, CreateSerialListener, NULL));
 	
 	pthread_t createUDPThread;
 	printf("iRobot Create UDPListner Thread: %d.\n", 
-		pthread_create(&createUDPThread, NULL, CreateSerialListener, NULL);
+		pthread_create(&createUDPThread, NULL, CreateSerialListener, NULL));
 }
 
 int main(int argc, char *argv[])
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 	bzero(&server, serverlen);
 	server.sin_family = AF_INET;
 	server.sin_addr.s_addr = INADDR_ANY;
-	server.sin_port = htons(atoi((char*)arg));
+	server.sin_port = htons(atoi((char*)argv+1));
 	if (bind(sock, (struct sockaddr *)&server, serverlen) < 0) 
 		printf("ERROR: binding\n");
 	fromlen = sizeof(struct sockaddr_in);
