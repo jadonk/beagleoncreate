@@ -27,6 +27,7 @@ public:
 	
 	int SetEdge(GpioEdge edge);
 	int SetValue(GpioVal value);
+	int SetDir(bool out); 
 	
 	int Poll(int usec, struct timespec & timeOfInterrupt);
 	
@@ -40,7 +41,6 @@ private:
 	int Unexport();
 	void OpenFd();
 	void CloseFd();
-	int SetDir(bool out); 
 	
 };
 

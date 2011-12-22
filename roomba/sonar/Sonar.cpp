@@ -8,7 +8,6 @@
 #include "Sonar.h"
 
 #define POLL_TIMEOUT 100
-#define SONAR_MEASURE_RATE 100000
 
 Sonar::Sonar(unsigned int gpioPinNum)
 {
@@ -38,7 +37,7 @@ struct timespec Sonar::TimeDiff()
 	return temp;
 }
 
-void Sonar::DisplayMeasurement()
+float Sonar::DisplayMeasurement()
 {
 	if (TimeDiff().tv_sec == 0)
 	{
@@ -56,12 +55,16 @@ void Sonar::DisplayMeasurement()
 			}
 			printf("Time taken is: %fs\n", time);
 			printf("Dist is: %fm\t minDist: %fm\t maxDist: %fm\n", dist, _minDist, _maxDist);
+			fflush(stdout);
+			return dist;
 		}
 	}
+	return -1.f;
 }
 
 void Sonar::StartPulse()
 {
+	_gpio->SetDir(true);
 	_gpio->SetValue(LOW);
 	usleep(10);
 	_gpio->SetValue(HIGH);
@@ -69,20 +72,22 @@ void Sonar::StartPulse()
 	_gpio->SetValue(LOW);
 }
 
-int Sonar::Run()
+float Sonar::Run()
 {
-	while(1)
+	StartPulse();
+	_gpio->SetEdge(RISING);
+	usleep(500);
+	if (_gpio->Poll(POLL_TIMEOUT, _risingTOI) > 0)
 	{
-		StartPulse();
-		_gpio->SetEdge(RISING);
-		if (_gpio->Poll(POLL_TIMEOUT, _risingTOI) > 0)
+		_gpio->SetEdge(FALLING);
+		if (_gpio->Poll(POLL_TIMEOUT, _fallingTOI) <= 0)
 		{
-			_gpio->SetEdge(FALLING);
-			while(_gpio->Poll(POLL_TIMEOUT, _fallingTOI) == -2);
-			fflush(stdout);
+			return -1.f;
 		}
-		DisplayMeasurement();
-		usleep(SONAR_MEASURE_RATE);
 	}
-	return 0;
+	else
+	{
+		return -1.f;
+	}
+	return DisplayMeasurement();
 }

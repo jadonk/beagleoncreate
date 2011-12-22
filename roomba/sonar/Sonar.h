@@ -4,13 +4,15 @@
 #include <time.h>
 #include "Gpio.h"
 
+#define SONAR_MEASURE_RATE 100000
+
 class Sonar
 {
 public:
 	Sonar(unsigned int gpioPinNum);
 	~Sonar();
 	
-	int Run();
+	float Run();
 	
 	
 private:
@@ -21,7 +23,7 @@ private:
 	struct timespec _fallingTOI;
 	
 	struct timespec TimeDiff();
-	void DisplayMeasurement();
+	float DisplayMeasurement();
 	void StartPulse();
 	
 };

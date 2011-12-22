@@ -10,6 +10,7 @@
 int main(int argc, char **argv, char **envp)
 {
 	unsigned int gpioPinNum;
+	float dist;
 	setpriority(PRIO_PROCESS, 0, -20);
 
 	if (argc < 2)
@@ -23,7 +24,15 @@ int main(int argc, char **argv, char **envp)
 	{
 		gpioPinNum = atoi(argv[1]);
 		Sonar * sonar = new Sonar(gpioPinNum);
-		sonar->Run();
+		while(1)
+		{
+			dist = sonar->Run();	
+			if (dist != -1.f)
+			{
+				// send out dist
+			}
+			usleep(SONAR_MEASURE_RATE);
+		}
 	}
 	catch( ... )
 	{

@@ -198,7 +198,7 @@ int Gpio::Poll(int usec, struct timespec & timeOfInterrupt)
 	int len;
 	char buf[MAX_BUF];
 	struct pollfd fdset[1];
-	
+
 	memset((void*) fdset, 0, sizeof(fdset));
 	fdset[0].fd = _fd;
 	fdset[0].events = POLLPRI;
@@ -210,15 +210,13 @@ int Gpio::Poll(int usec, struct timespec & timeOfInterrupt)
 		perror("\npoll() failed!\n");
 		return -1;
 	}
-	if (fdset[0].revents & POLLPRI) 
+	else if (ret > 0)
 	{
-		len = read(fdset[0].fd, buf, MAX_BUF);
-		return ret;
-	}
-	if (fdset[0].revents & POLLERR)
-	{
-		printf("POLLERR\n");
-		return -2;
+		if (fdset[0].revents & POLLPRI)
+		{
+			len = read(fdset[0].fd, buf, MAX_BUF);
+			return ret;
+		}
 	}
 	// timeout
 	return 0;
