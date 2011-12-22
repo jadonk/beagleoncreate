@@ -9,9 +9,10 @@
 class Create
 {
 public:
-	Create(int sock, struct sockaddr * createPort, unsigned long connectedHost);
+	Create(int sock, struct sockaddr_in & createPort, unsigned long connectedHost);
 	~Create();
 	
+	int InitSerial();
 	void CloseSerial();
 	void SendSerial(char* buf, int bufLength);
 	int RunSerialListener();
@@ -20,11 +21,9 @@ public:
 	bool isEnding;
 
 private:
-	int InitSerial();
-	
 	int _fd;
 	int _sock;
-	struct sockaddr * _createPort;
+	struct sockaddr_in _createPort;
 	unsigned long _connectedHost;
 };
 

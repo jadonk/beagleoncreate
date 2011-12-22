@@ -36,7 +36,7 @@ void StartListening(Packet & packet)
 	remoteCreate.sin_addr.s_addr = packet.addr.s_addr;
 	remoteCreate.sin_port = htons(CREATE_PORT);
 
-	create = new Create(remoteSock, (struct sockaddr*) &remoteCreate, (unsigned long) packet.addr.s_addr);
+	create = new Create(remoteSock, remoteCreate, (unsigned long) packet.addr.s_addr);
 
 	pthread_t createSerialThread;
 	printf("iRobot Create SerialListner Thread: %d.\n", 
@@ -44,7 +44,7 @@ void StartListening(Packet & packet)
 	
 	pthread_t createUDPThread;
 	printf("iRobot Create UDPListner Thread: %d.\n", 
-		pthread_create(&createUDPThread, NULL, CreateSerialListener, NULL));
+		pthread_create(&createUDPThread, NULL, CreateUDPListener, NULL));
 }
 
 int main(int argc, char *argv[])

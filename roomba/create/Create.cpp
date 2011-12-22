@@ -13,17 +13,19 @@
 #define CREATE_SERIAL_PORT "/dev/ttyUSB0"
 #define CREATE_SERIAL_BRATE B57600
 
-Create::Create(int sock, struct sockaddr * createPort, unsigned long connectedHost)
+Create::Create(int sock, struct sockaddr_in & createPort, unsigned long connectedHost)
 {
 	_fd = -1;
 	_sock = sock;
 	_createPort = createPort;
 	_connectedHost = connectedHost;
 	isEnding = false;
+	InitSerial();
 }
 
 Create::~Create()
 {
+	CloseSerial();
 }
 
 int Create::InitSerial()
@@ -94,8 +96,6 @@ int Create::RunSerialListener()
 	fd_set         input;
 	struct timeval timeout;
 	
-	InitSerial();
-	
 	if (_fd == -1)
 	{
 		printf("ERROR: _fd is not initialized\n");
@@ -117,7 +117,8 @@ int Create::RunSerialListener()
 		timeout.tv_usec = 0;
 
 		/* Do the select */
-		ret = select(max_fd, &input, NULL, NULL, &timeout);
+		//ret = select(max_fd, &input, NULL, NULL, &timeout);
+		ret = select(max_fd, &input, NULL, NULL, NULL);
 
 		/* See if there was an error */
 		if (ret < 0)
@@ -128,8 +129,12 @@ int Create::RunSerialListener()
 			if (FD_ISSET(_fd, &input))
 			{
 				bufLength = read(_fd, buf, MAXPACKETSIZE);
-				if (sendto(_sock, buf, bufLength, 0, (const struct sockaddr *) _createPort, sizeof(struct sockaddr_in)) < 0) printf("ERROR: sendto\n");
-				printf("%c", buf[0]);
+				if (sendto(_sock, buf, bufLength, 0, (const struct sockaddr *) &_createPort, sizeof(struct sockaddr_in)) < 0) printf("ERROR: sendto\n");
+				for (int i = 0; i < bufLength; i++)
+				{	
+					printf("%i ", int(buf[i]));
+				}
+				//printf("%c", buf[0]);
 			}
 		}
 		fflush(stdout);
