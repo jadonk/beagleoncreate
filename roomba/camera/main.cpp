@@ -48,8 +48,7 @@ void debugMsg(const char *func, const char *msg)
 
 void* RunARtagVideo(void* arg)
 {
-	camera->StreamARtagVideo();
-	return;
+	return (void*) camera->StreamARtagVideo();
 }
 
 void* StreamSensorData(void* arg)
@@ -109,10 +108,6 @@ void MakeConnection(Packet & packet)
 
 	connectedHost = packet.addr.s_addr;
 	
-	pthread_t createSerialThread;
-	printf("iRobot Create Thread: %d.\n",
-		pthread_create(&createSerialThread, NULL, CreateSerialHandler, NULL));
-
 	pthread_t sensorThread;
 	printf("Sensor Thread: %d.\n", 
 		pthread_create(&sensorThread, NULL, StreamSensorData, (void*)&packet.addr.s_addr));
@@ -141,7 +136,6 @@ void ProcessPackets(Packet & packet)
 			debugMsg(__func__, "======= packet received, type: CTRL");
 			if (connectedHost == packet.addr.s_addr)
 			{
-				HandleControls(packet);
 			}
 			else
 			{

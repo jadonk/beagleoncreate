@@ -10,8 +10,9 @@
 #include "Camera.h"
 
 using namespace cv;
+GMainLoop* loop;
 
-Camera::Camera(int remoteSock, struct sockaddr_in & videoPort, struct sockaddr_in * artagPort)
+Camera::Camera(int remoteSock, struct sockaddr_in & videoPort, struct sockaddr_in & artagPort)
 {
 	_sock = remoteSock;
 	_videoPort = videoPort;
@@ -55,9 +56,9 @@ void Camera::SendARtag()
 	}
 }
 
-GstFlowReturn Camera::new_buffer (GstAppSink *app_sink, gpointer user_data)
+GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data)
 {
-	GstBuffer *buffer = gst_app_sink_pull_buffer( (GstAppSink*) gst_bin_get_by_name( GST_BIN(pipeline1), app_sink_name));
+	GstBuffer *buffer = gst_app_sink_pull_buffer( (GstAppSink*) gst_bin_get_by_name( GST_BIN(pipeline1), APPSINKNAME));
 
 	//processing...
 	//handle imageData for processing
@@ -91,7 +92,7 @@ GstFlowReturn Camera::new_buffer (GstAppSink *app_sink, gpointer user_data)
 	return GST_FLOW_OK;
 }
 
-static gboolean Camera::bus_call(GstBus *bus, GstMessage *msg, gpointer data)
+static gboolean bus_call(GstBus *bus, GstMessage *msg, gpointer data)
 {
         gchar *userdata = (gchar *) data;
 
@@ -160,7 +161,7 @@ static gboolean Camera::bus_call(GstBus *bus, GstMessage *msg, gpointer data)
 	return TRUE;
 }
 
-void Camera::StreamARtagVideo()
+int Camera::StreamARtagVideo()
 {
 	// GStreamer stuff...
 	GError *error = NULL;
@@ -231,13 +232,13 @@ void Camera::StreamARtagVideo()
 		pthread_exit(NULL);
 	}
 
-	if (!gst_bin_get_by_name( GST_BIN(pipeline1), app_sink_name))
+	if (!gst_bin_get_by_name( GST_BIN(pipeline1), APPSINKNAME))
 	{
 		g_printerr("Error creating app-sink\n");
 		pthread_exit(NULL);
 	}
 
-	if (!gst_bin_get_by_name( GST_BIN(pipeline2), app_src_name))
+	if (!gst_bin_get_by_name( GST_BIN(pipeline2), APPSRCNAME))
 	{
 		g_printerr("error creating app-src\n");
 		pthread_exit(NULL);
@@ -258,8 +259,8 @@ void Camera::StreamARtagVideo()
 	//configuring AppSink's callback  (Pipeline1)
 	callbacks.eos = NULL;
 	callbacks.new_preroll = NULL;
-	callbacks.new_buffer = this.new_buffer;
-	gst_app_sink_set_callbacks( (GstAppSink*) gst_bin_get_by_name(GST_BIN(pipeline1), app_sink_name), &callbacks, NULL, NULL);
+	callbacks.new_buffer = new_buffer;
+	gst_app_sink_set_callbacks( (GstAppSink*) gst_bin_get_by_name(GST_BIN(pipeline1), APPSINKNAME), &callbacks, NULL, NULL);
 
 	//Set the pipeline to "playing" state
 	//g_print("Setting pipeline1's state to \"playing\".\n");
@@ -295,6 +296,7 @@ void Camera::StreamARtagVideo()
 	g_main_loop_unref(loop);
 
 	pthread_exit(NULL);
+	return 0;
 }
 
 void Camera::QuitMainLoop()
