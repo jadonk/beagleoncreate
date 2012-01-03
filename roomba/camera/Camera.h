@@ -25,21 +25,21 @@ public:
 	
 	int StreamARtagVideo();
 	void QuitMainLoop();
-	
-private:
 	void SendImage(IplImage * image);
 	void SendARtag();
-	
-	int _sock;
-	struct sockaddr_in _videoPort;
-	struct sockaddr_in _artagPort;
-	
+
+	GMainLoop *loop;	
 	GstElement *pipeline1;
 	GstElement *pipeline2;
 	IplImage * img;
 	IplImage * gray;
 	uchar * IMG_data;
 	ARtagLocalizer ar;
+	
+private:
+	int _sock;
+	struct sockaddr_in _videoPort;
+	struct sockaddr_in _artagPort;
 };
 
 #endif

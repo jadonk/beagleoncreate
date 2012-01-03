@@ -10,15 +10,14 @@
 #include "Camera.h"
 
 using namespace cv;
-GMainLoop* loop;
-Camera* camera;
+
+extern Camera * camera;
 
 Camera::Camera(int remoteSock, struct sockaddr_in & videoPort, struct sockaddr_in & artagPort)
 {
 	_sock = remoteSock;
 	_videoPort = videoPort;
 	_artagPort = artagPort;
-	camera = this;
 }
 
 Camera::~Camera()
@@ -60,7 +59,7 @@ void Camera::SendARtag()
 
 GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data)
 {
-	GstBuffer *buffer = gst_app_sink_pull_buffer( (GstAppSink*) gst_bin_get_by_name( GST_BIN(pipeline1), APPSINKNAME));
+	GstBuffer *buffer = gst_app_sink_pull_buffer( (GstAppSink*) gst_bin_get_by_name( GST_BIN(camera->pipeline1), APPSINKNAME));
 
 	//processing...
 	//handle imageData for processing
@@ -72,14 +71,14 @@ GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data)
 	cvCvtColor(camera->img,camera->gray,CV_BGR2GRAY);
 
 	//detect a image ...
-	if(!ar.getARtagPose(camera->gray, camera->img, 0))
+	if(!camera->ar.getARtagPose(camera->gray, camera->img, 0))
 	{
 //		printf("No artag in the view.\n");
 	}
-	SendARtag();
+	camera->SendARtag();
 	IplImage* grayrz = cvCreateImage(cvSize(160,120), IPL_DEPTH_8U, 1);
 	cvResize(camera->gray, grayrz);
-	SendImage(grayrz);
+	camera->SendImage(grayrz);
 	cvReleaseImage(&grayrz);
 
 	gst_object_unref(buffer);
@@ -112,7 +111,7 @@ static gboolean bus_call(GstBus *bus, GstMessage *msg, gpointer data)
 			if ( g_ascii_strcasecmp(userdata, gst_element_get_name(pipeline2)) == 0)
 			{
 			        g_print("Finished playback (%s)\n",userdata);
-				g_main_loop_quit(loop);
+				g_main_loop_quit(camera->loop);
 			}
 			break;*/
 		}
@@ -128,7 +127,7 @@ static gboolean bus_call(GstBus *bus, GstMessage *msg, gpointer data)
 			g_printerr("Error in pipeline:%s\nError Message: %s\n", userdata, error->message);
 			g_error_free(error);
 
-			g_main_loop_quit(loop);
+			g_main_loop_quit(camera->loop);
 			break;
 		}
 

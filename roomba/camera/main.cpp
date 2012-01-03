@@ -33,7 +33,7 @@ struct sockaddr_in remoteVideo;
 struct sockaddr_in remoteARtag;
 struct sockaddr_in remoteCreate;
 
-Camera* camera;
+Camera * camera;
 
 void error(const char *msg)
 {
