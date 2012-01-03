@@ -11,12 +11,14 @@
 
 using namespace cv;
 GMainLoop* loop;
+Camera* camera;
 
 Camera::Camera(int remoteSock, struct sockaddr_in & videoPort, struct sockaddr_in & artagPort)
 {
 	_sock = remoteSock;
 	_videoPort = videoPort;
 	_artagPort = artagPort;
+	camera = this;
 }
 
 Camera::~Camera()
@@ -62,21 +64,21 @@ GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data)
 
 	//processing...
 	//handle imageData for processing
-	IMG_data = (uchar*) img->imageData;
+	camera->IMG_data = (uchar*) camera->img->imageData;
 	// copies AppSink buffer data to the uchar vector of IplImage */
-	memcpy(IMG_data, GST_BUFFER_DATA(buffer), GST_BUFFER_SIZE(buffer));
+	memcpy(camera->IMG_data, GST_BUFFER_DATA(buffer), GST_BUFFER_SIZE(buffer));
 	// Image buffer is RGB, but OpenCV handles it as BGR, so channels R and B must be swapped */
-	cvConvertImage(img,img,CV_CVTIMG_SWAP_RB);
-	cvCvtColor(img,gray,CV_BGR2GRAY);
+	cvConvertImage(camera->img,camera->img,CV_CVTIMG_SWAP_RB);
+	cvCvtColor(camera->img,camera->gray,CV_BGR2GRAY);
 
 	//detect a image ...
-	if(!ar.getARtagPose(gray, img, 0))
+	if(!ar.getARtagPose(camera->gray, camera->img, 0))
 	{
 //		printf("No artag in the view.\n");
 	}
 	SendARtag();
 	IplImage* grayrz = cvCreateImage(cvSize(160,120), IPL_DEPTH_8U, 1);
-	cvResize(gray, grayrz);
+	cvResize(camera->gray, grayrz);
 	SendImage(grayrz);
 	cvReleaseImage(&grayrz);
 
