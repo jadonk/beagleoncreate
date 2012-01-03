@@ -296,3 +296,8 @@ void Camera::StreamARtagVideo()
 
 	pthread_exit(NULL);
 }
+
+void Camera::QuitMainLoop()
+{
+	g_main_loop_quit(loop);
+}

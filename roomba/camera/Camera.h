@@ -20,15 +20,17 @@
 class Camera
 {
 public:
-	Camera(int remoteSock, struct sockaddr_in & videoPort);
+	Camera(int remoteSock, struct sockaddr_in & videoPort, struct sockaddr_in & artagPort);
 	~Camera();
+	
+	void StreamARtagVideo();
+	void QuitMainLoop();
 	
 private:
 	void SendImage(IplImage * image);
 	void SendARtag();
 	GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data);
 	static gboolean bus_call(GstBus *bus, GstMessage *msg, gpointer data);
-	void StreamARtagVideo();
 	
 	int _sock;
 	struct sockaddr_in _videoPort;
