@@ -10,12 +10,20 @@ LDFLAGS = -L. -lpthread $(OPENCV_LFLAGS) $(ARTKP_LFLAGS) $(GSTREAMER_LFLAGS)
 CPP	= g++
 
 SRCS 	= main.cpp \
-	  ARtag.cpp \
-	  ARtagLocalizer.cpp 
+	  camera/ARtag.cpp \
+	  camera/ARtagLocalizer.cpp \
+	  camera/Camera.cpp \
+	  create/Create.cpp \
+	  sonar/Gpio.cpp \
+	  sonar/Sonar.cpp 
 
 OBJS 	= main.o \
 	  ARtag.o \
-	  ARtagLocalizer.o 
+	  ARtagLocalizer.o \
+	  Camera.o \
+	  Create.o \
+	  Gpio.o \
+	  Sonar.o 
 
 EXECUTABLE = main
 
@@ -24,16 +32,25 @@ all	: $(EXECUTABLE)
 $(EXECUTABLE) : $(OBJS)
 	$(CPP) $(OBJS) $(LDFLAGS) -o $@ $*
 
-main.o	: main.cpp
+ARtag.o	: camera/ARtag.h camera/ARtag.cpp
 	$(CPP) $(CFLAGS) -c $^
 
-ARtag.o	: ARtag.h ARtag.cpp
+ARtagLocalizer.o : camera/ARtagLocalizer.h camera/ARtag.h camera/ARtagLocalizer.cpp
 	$(CPP) $(CFLAGS) -c $^
 
-ARtagLocalizer.o : ARtagLocalizer.h ARtag.h ARtagLocalizer.cpp
+Camera.o : camera/ARtagLocalizer.h camera/ARtag.h camera/Camera.h camera/Camera.cpp
 	$(CPP) $(CFLAGS) -c $^
 
-$(OBJS)	: Packet.h ARtag.h ARtagLocalizer.h 
+Create.o : Packet.h create/Create.h create/Create.cpp
+	$(CPP) $(CFLAGS) -c $^
+
+Sonar.o	: sonar/Gpio.h sonar/Sonar.h sonar/Sonar.cpp
+	$(CPP) $(CFLAGS) -c $^
+
+Gpio.o : sonar/Gpio.h sonar/Gpio.cpp
+	$(CPP) $(CFLAGS) -c $^
+
+$(OBJS)	: Packet.h control/Control.h camera/ARtag.h camera/ARtagLocalizer.h create/Create.h sonar/Gpio.h sonar/Sonar.h 
 
 clean	:
 	rm -rf main *.o

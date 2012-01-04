@@ -5,9 +5,11 @@ properties  (Constant)
     END = 2;
     CTRL = 3;
     DATA = 4;
-    ERROR = 5;
-    SHUTDOWN = 6;
-    UNKNOWN = 7;
+	IMAGE = 5;
+	SONAR = 6;
+    ERROR = 7;
+    SHUTDOWN = 8;
+    UNKNOWN = 9;
 end %constant properties
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 methods (Access = private)

@@ -14,6 +14,7 @@ Sonar::Sonar(unsigned int gpioPinNum)
 	_gpio = new Gpio(gpioPinNum);
 	_minDist = 999;
 	_maxDist = 0;
+	isEnding = false;
 }
 
 Sonar::~Sonar()
@@ -59,7 +60,7 @@ float Sonar::DisplayMeasurement()
 			return dist;
 		}
 	}
-	return -1.f;
+	return 0.f;
 }
 
 void Sonar::StartPulse()

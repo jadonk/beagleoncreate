@@ -12,6 +12,8 @@ enum PacketType
 	END,
 	CTRL,
 	DATA,
+	IMAGE,
+	SONAR,
 	ERROR,
 	SHUTDOWN,
 	UNKNOWN
@@ -54,6 +56,13 @@ struct Packet
 			int height;
 			char data[19200];
 		}image;
+		
+		struct
+		{
+			float dist1;
+			float dist2;
+			float dist3;
+		}sonar;
 
 		struct
 		{

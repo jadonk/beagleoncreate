@@ -31,7 +31,7 @@ Camera::~Camera()
 void Camera::SendImage(IplImage * image)
 {
 	Packet packet;
-	packet.type = DATA;
+	packet.type = IMAGE;
 	packet.u.image.width = image->width;
 	packet.u.image.height = image->height;
 	memcpy(&packet.u.image.data, image->imageData, sizeof(packet.u.image.data));

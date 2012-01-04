@@ -13,7 +13,7 @@ public:
 	~Sonar();
 	
 	float Run();
-	
+	bool isEnding;
 	
 private:
 	Gpio * _gpio;
