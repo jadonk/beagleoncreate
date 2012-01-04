@@ -32,6 +32,9 @@ all	: $(EXECUTABLE)
 $(EXECUTABLE) : $(OBJS)
 	$(CPP) $(OBJS) $(LDFLAGS) -o $@ $*
 
+main.o	: main.cpp
+	$(CPP) $(CFLAGS) -c $^
+
 ARtag.o	: camera/ARtag.h camera/ARtag.cpp
 	$(CPP) $(CFLAGS) -c $^
 
