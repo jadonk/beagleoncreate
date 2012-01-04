@@ -54,9 +54,9 @@ float Sonar::DisplayMeasurement()
 			{
 				_maxDist = dist;
 			}
-			printf("Time taken is: %fs\n", time);
+			/*printf("Time taken is: %fs\n", time);
 			printf("Dist is: %fm\t minDist: %fm\t maxDist: %fm\n", dist, _minDist, _maxDist);
-			fflush(stdout);
+			fflush(stdout);*/
 			return dist;
 		}
 	}

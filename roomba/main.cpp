@@ -148,19 +148,19 @@ void* StreamSensorData(void* arg)
 		pthread_create(&cameraThread, NULL, RunARtagVideo, NULL));
 	
 	// run create control	
-	pthread_t createSerialThread;
+	/*pthread_t createSerialThread;
 	printf("iRobot Create SerialListner Thread: %d.\n", 
 		pthread_create(&createSerialThread, NULL, CreateSerialListener, NULL));
 	
 	pthread_t createUDPThread;
 	printf("iRobot Create UDPListner Thread: %d.\n", 
-		pthread_create(&createUDPThread, NULL, CreateUDPListener, NULL));
+		pthread_create(&createUDPThread, NULL, CreateUDPListener, NULL));*/
 		
 	// run sonar
 	pthread_t sonarThread;
 	printf("Sonar Thread: %d.\n", 
 		pthread_create(&sonarThread, NULL, SonarSender, NULL));
-		
+	
 	while(1)
 	{
 		pthread_mutex_lock( &endMutex );
@@ -181,8 +181,8 @@ void* StreamSensorData(void* arg)
 	isInit = false;
 	
 	pthread_join(cameraThread, NULL);
-	pthread_join(createSerialThread, NULL);
-	pthread_join(createUDPThread, NULL);
+	//pthread_join(createSerialThread, NULL);
+	//pthread_join(createUDPThread, NULL);
 	pthread_join(sonarThread, NULL);
 	delete camera;
 	delete create;
@@ -214,6 +214,10 @@ void MakeConnection(Packet & packet)
 	remoteCreate.sin_family = AF_INET;
 	remoteCreate.sin_addr.s_addr = packet.addr.s_addr;
 	remoteCreate.sin_port = htons(CREATE_PORT);
+
+	remoteSonar.sin_family = AF_INET;
+	remoteSonar.sin_addr.s_addr = packet.addr.s_addr;
+	remoteSonar.sin_port = htons(SONAR_PORT);
 
 	connectedHost = packet.addr.s_addr;
 

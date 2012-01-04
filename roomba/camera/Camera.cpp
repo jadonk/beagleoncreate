@@ -122,7 +122,7 @@ int Camera::Setup()
 	//configuring pipeline parameters string
 	// obs.: try g_strdup_printf
 	int res = 0;
-	res =  sprintf(pipeline1_str, "v4l2src ! ffmpegcolorspace ! video/x-raw-rgb, width=%d, height=%d ! appsink name=\"%s\"", IMG_WIDTH, IMG_HEIGHT, APPSINKNAME);
+	res =  sprintf(pipeline1_str, "v4l2src ! ffmpegcolorspace ! videorate ! video/x-raw-rgb, width=%d, height=%d, framerate=15/1 ! appsink name=\"%s\"", IMG_WIDTH, IMG_HEIGHT, APPSINKNAME);
 	if (res < 0)
 	{
 		g_printerr("Error configuring pipeline1's string\n");

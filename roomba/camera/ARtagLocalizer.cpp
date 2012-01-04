@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "ARtagLocalizer.h"
 #define FUDGE_FACTOR 0.97
 
@@ -137,7 +138,8 @@ bool ARtagLocalizer::getARtagPose(IplImage* src, IplImage* dst, int camID)
 				// ARTKPlus bug that occurs sometimes
 				continue;
 			}
-			
+
+			printf("ARtag Info:\n");
 			printf("Id: %d\t Conf: %.2f\n", markers[m].id, markers[m].cf);
 			printf("x: %.2f \t y: %.2f \t z: %.2f \t yaw: %.2f\n", x,y,z,yaw);
 			printf("\n");

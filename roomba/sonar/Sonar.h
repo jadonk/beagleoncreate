@@ -1,6 +1,7 @@
 #ifndef SONAR_H
 #define SONAR_H
 
+#include <stdio.h>
 #include <time.h>
 #include "Gpio.h"
 
