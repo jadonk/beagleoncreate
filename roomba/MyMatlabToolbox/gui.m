@@ -22,7 +22,7 @@ function varargout = gui(varargin)
 
 % Edit the above text to modify the response to help gui
 
-% Last Modified by GUIDE v2.5 17-Oct-2011 04:06:29
+% Last Modified by GUIDE v2.5 04-Jan-2012 13:48:56
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -81,11 +81,17 @@ while(1)
         end
     end
     tag = streamCreateARtag();
-    if tag.id ~= -1
+    if tag.isValid ~= 0
         set(handles.txtX,'String',num2str(tag.x));
         set(handles.txtY,'String',num2str(tag.y));
         set(handles.txtZ,'String',num2str(tag.z));
         set(handles.txtYaw,'String',num2str(tag.yaw));
+    end
+    dist = streamCreateSonar();
+    if dist.isValid ~= 0
+        set(handles.txtDist1,'String',num2str(dist.sonar1));
+        set(handles.txtDist2,'String',num2str(dist.sonar2));
+        set(handles.txtDist3,'String',num2str(dist.sonar3));
     end
     pause(0.1)
 end
@@ -140,4 +146,3 @@ function btnCTRL_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 sendpacket(PacketType.CTRL);
-
