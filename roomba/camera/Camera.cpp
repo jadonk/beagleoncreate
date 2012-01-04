@@ -9,6 +9,8 @@
 #include "Packet.h"
 #include "Camera.h"
 
+#define NCHANNELS 3
+
 using namespace cv;
 
 extern Camera * camera;
@@ -88,7 +90,7 @@ GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data)
 	return GST_FLOW_OK;
 }
 
-int Camera::StreamARtagVideo()
+int Camera::Setup()
 {
 	// GStreamer stuff...
 	GError *error = NULL;
@@ -96,8 +98,7 @@ int Camera::StreamARtagVideo()
 	gchar pipeline1_str[256];
 
 	// OpenCV stuff...
-	int nChannels = 3;
-	img = cvCreateImage( cvSize(IMG_WIDTH,IMG_HEIGHT), IPL_DEPTH_8U, nChannels);
+	img = cvCreateImage( cvSize(IMG_WIDTH,IMG_HEIGHT), IPL_DEPTH_8U, NCHANNELS);
 	gray = cvCreateImage( cvSize(IMG_WIDTH,IMG_HEIGHT), IPL_DEPTH_8U, 1);
 
 	// Initializing GStreamer
@@ -111,7 +112,7 @@ int Camera::StreamARtagVideo()
 	if (ar->initARtagPose(320, 240, 180.f) != 0)
 	{
 		printf("Failed to init ARtagLocalizer!\n");
-		return 0;
+		return -1;
 	}
 	else
 	{
@@ -125,7 +126,7 @@ int Camera::StreamARtagVideo()
 	if (res < 0)
 	{
 		g_printerr("Error configuring pipeline1's string\n");
-		return 0;
+		return -1;
 	}
 
 	//debugging
@@ -136,13 +137,13 @@ int Camera::StreamARtagVideo()
 	if (error)
 	{
 		g_printerr("Error [%s]\n",error->message);
-		return 0;
+		return -1;
 	}
 
 	if (!gst_bin_get_by_name( GST_BIN(pipeline1), APPSINKNAME))
 	{
 		g_printerr("Error creating app-sink\n");
-		return 0;
+		return -1;
 	}
 
 	//configuring AppSink's callback  (Pipeline1)
@@ -150,17 +151,12 @@ int Camera::StreamARtagVideo()
 	callbacks.new_preroll = NULL;
 	callbacks.new_buffer = new_buffer;
 	gst_app_sink_set_callbacks( (GstAppSink*) gst_bin_get_by_name(GST_BIN(pipeline1), APPSINKNAME), &callbacks, NULL, NULL);
+	
+	return 0;
+}
 
-	//Set the pipeline to "playing" state
-	//g_print("Setting pipeline1's state to \"playing\".\n");
-	gst_element_set_state(pipeline1, GST_STATE_PLAYING);
-
-	// Iterate
-	//g_print("Running...\n");
-	printf("Running ARtag detection.\n");
-	g_main_loop_run(loop);
-
-	// Out of the main loop, clean up nicely
+void Camera::CleanUp()
+{
 	//g_print("Stopping playback - pipeline1\n");
 	gst_element_set_state(pipeline1, GST_STATE_NULL);
 
@@ -173,6 +169,23 @@ int Camera::StreamARtagVideo()
 
 	//unref mainloop
 	g_main_loop_unref(loop);
+}
+
+int Camera::StreamARtagVideo()
+{
+	if (Setup() != 0)
+		return -1;
+		
+	//Set the pipeline to "playing" state
+	//g_print("Setting pipeline1's state to \"playing\".\n");
+	gst_element_set_state(pipeline1, GST_STATE_PLAYING);
+
+	// Iterate
+	printf("Running ARtag detection.\n");
+	g_main_loop_run(loop);
+
+	// Out of the main loop, clean up nicely
+	CleanUp();
 
 	return 0;
 }

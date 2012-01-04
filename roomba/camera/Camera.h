@@ -37,6 +37,9 @@ public:
 	ARtagLocalizer * ar;
 	
 private:
+	int Setup();
+	void CleanUp();
+
 	int _sock;
 	struct sockaddr_in _videoPort;
 	struct sockaddr_in _artagPort;
