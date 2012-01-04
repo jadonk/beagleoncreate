@@ -84,94 +84,16 @@ GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data)
 	cvReleaseImage(&grayrz);
 
 	gst_object_unref(buffer);
-	// Image buffer is RGB, but OpenCV handles it as BGR, so channels R and B must be swapped */
-	/*cvConvertImage(img,img,CV_CVTIMG_SWAP_RB);
-	//cvCvtColor(img,img,CV_RGB2BGR);
-		
-	memcpy(GST_BUFFER_DATA(buffer),IMG_data, GST_BUFFER_SIZE(buffer));
-	//pushes the buffer to AppSrc, it takes the ownership of the buffer. you do not need to unref
-	gst_app_src_push_buffer( GST_APP_SRC( gst_bin_get_by_name(GST_BIN(pipeline2),app_src_name)) , buffer);*/
 	
 	return GST_FLOW_OK;
-}
-
-static gboolean bus_call(GstBus *bus, GstMessage *msg, gpointer data)
-{
-        gchar *userdata = (gchar *) data;
-
-        switch(GST_MESSAGE_TYPE(msg))
-        {
-                case GST_MESSAGE_EOS:
-                {
-			//sender check - pipeline 1 sends a EOS msg to AppSrc in pipeline2
-			/*if (gascii_strcasecmp(userdata, gst_element_get_name(pipeline1)) == 0)
-			 * {
-			 * 	g_print("EOS detected (%s)\n", userdata);
-			 * 	gst_app_src_end_of_stream( GST_APP_SRC( gst_bin_get_by_name( GST_BIN(pipeline2), app_src_name ) ) );
-			 * }
-			//sender check - when pipeline2 sends the EOS msg, quite.
-			if ( g_ascii_strcasecmp(userdata, gst_element_get_name(pipeline2)) == 0)
-			{
-			        g_print("Finished playback (%s)\n",userdata);
-				g_main_loop_quit(camera->loop);
-			}
-			break;*/
-		}
-
-		case GST_MESSAGE_ERROR:
-		{
-			gchar *debug;
-			GError *error;
-
-			gst_message_parse_error(msg, &error, &debug);
-			g_free(debug);
-
-			g_printerr("Error in pipeline:%s\nError Message: %s\n", userdata, error->message);
-			g_error_free(error);
-
-			g_main_loop_quit(camera->loop);
-			break;
-		}
-
-		case GST_MESSAGE_STATE_CHANGED :
-		{
-			GstState oldstate;
-			GstState newstate;
-			GstState pending;
-
-			gst_message_parse_state_changed (msg,&oldstate,&newstate,&pending);
-			//g_debug("pipeline:%s old:%s new:%s pending:%s", userdata, gst_element_state_get_name(oldstate), gst_element_state_get_name(newstate), gst_element_state_get_name(pending));
-			break;
-		}
-
-		case GST_MESSAGE_WARNING:
-		{
-			//gchar *debug;
-			//GError *error;
-
-			//gst_message_parse_warning (msg,&error,&debug);
-			//g_warning("pipeline:%s",userdata);
-			//g_warning("debug: %s", debug);
-			//g_warning("error: %s", error->message);
-			//g_free (debug);
-			//g_error_free (error);
-			break;
-		}
-
-		default:
-			break;
-	}
-	return TRUE;
 }
 
 int Camera::StreamARtagVideo()
 {
 	// GStreamer stuff...
 	GError *error = NULL;
-	GstBus *bus = NULL;
 	GstAppSinkCallbacks callbacks;
 	gchar pipeline1_str[256];
-	//gchar pipeline2_str[256];
 
 	// OpenCV stuff...
 	int nChannels = 3;
@@ -206,13 +128,6 @@ int Camera::StreamARtagVideo()
 		return 0;
 	}
 
-	/*res = sprintf(pipeline2_str, "appsrc name=\"%s\" ! queue ! ffmpegcolorspace ! video/x-raw-rgb, width=%d, height=%d ! ximagesink", APPSRCNAME, IMG_WIDTH, IMG_HEIGHT );
-	if (res < 0)
-	{
-		g_printerr("Error configuring pipeline2's string \n");
-		return 0;
-	}*/
-	
 	//debugging
 	//g_print("%s\n",pipeline1_str);
 	//creating pipeline1
@@ -224,40 +139,11 @@ int Camera::StreamARtagVideo()
 		return 0;
 	}
 
-	//debugging
-	//g_print("%s\n",pipeline2_str);
-	//creating pipeline2
-	/*pipeline2 = gst_parse_launch(pipeline2_str, &error);
-
-	if (error)
-	{
-		g_printerr("Error [%s]\n",error->message);
-		return 0;
-	}*/
-
 	if (!gst_bin_get_by_name( GST_BIN(pipeline1), APPSINKNAME))
 	{
 		g_printerr("Error creating app-sink\n");
 		return 0;
 	}
-
-	/*if (!gst_bin_get_by_name( GST_BIN(pipeline2), APPSRCNAME))
-	{
-		g_printerr("error creating app-src\n");
-		return 0;
-	}*/
-
-	// Adding msg handler to Pipeline1
-	//g_print("Adding msg handler to %s\n", gst_element_get_name(pipeline1));
-	bus = gst_pipeline_get_bus( GST_PIPELINE(pipeline1) );
-	gst_bus_add_watch(bus, bus_call, gst_element_get_name(pipeline1));
-	gst_object_unref(bus);
-
-	// Adding msg handler to Pipeline1
-	//g_print("Adding msg handler to %s\n",gst_element_get_name(pipeline2));
-	/*bus = gst_pipeline_get_bus( GST_PIPELINE(pipeline2) );
-	gst_bus_add_watch(bus, bus_call, gst_element_get_name(pipeline2));
-	gst_object_unref(bus);*/
 
 	//configuring AppSink's callback  (Pipeline1)
 	callbacks.eos = NULL;
@@ -269,10 +155,6 @@ int Camera::StreamARtagVideo()
 	//g_print("Setting pipeline1's state to \"playing\".\n");
 	gst_element_set_state(pipeline1, GST_STATE_PLAYING);
 
-	//Set the pipeline2 to "playing" state
-	//g_print("Setting pipeline2's state to \"playing\".\n");
-	//gst_element_set_state(pipeline2, GST_STATE_PLAYING);
-
 	// Iterate
 	//g_print("Running...\n");
 	printf("Running ARtag detection.\n");
@@ -282,14 +164,8 @@ int Camera::StreamARtagVideo()
 	//g_print("Stopping playback - pipeline1\n");
 	gst_element_set_state(pipeline1, GST_STATE_NULL);
 
-	//g_print("Stopping playback - pipeline2\n");
-	//gst_element_set_state(pipeline2, GST_STATE_NULL);
-
 	//g_print("Deleting pipeline1.\n");
 	gst_object_unref( GST_OBJECT(pipeline1) );
-
-	//g_print("Deleting pipeline2.\n");
-	//gst_object_unref( GST_OBJECT(pipeline2) );
 
 	//deleting image
 	cvReleaseImage(&img);
