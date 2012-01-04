@@ -145,9 +145,11 @@ bool ARtagLocalizer::getARtagPose(IplImage* src, IplImage* dst, int camID)
 			foundAny = true;
 			char str[30];
 			sprintf(str,"%d",markers[m].id);
-			cvPutText (dst,str,cvPoint( markers[m].pos[0]+25,markers[m].pos[1]+10),&cvFont(3,3),cvScalar(0,0,255));
+			CvFont font1 = cvFont(3,3);
+			CvFont font2 = cvFont(1,1);
+			cvPutText (dst,str,cvPoint( markers[m].pos[0]+25,markers[m].pos[1]+10),&font1,cvScalar(0,0,255));
 			sprintf(str,"(%.2f,%.2f,%.2f)", x*fudge + xoffset, -(y*fudge + yoffset), yaw + yawoffset);
-			cvPutText (dst,str,cvPoint( markers[m].pos[0]+25,markers[m].pos[1]+25),&cvFont(1,1),cvScalar(0,0,255));
+			cvPutText (dst,str,cvPoint( markers[m].pos[0]+25,markers[m].pos[1]+25),&font2,cvScalar(0,0,255));
 
 			cv::Mat PoseM(4, 4, CV_32F, modelViewMatrix_);
 			cv::transpose(PoseM,PoseM);
