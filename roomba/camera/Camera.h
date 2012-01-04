@@ -34,7 +34,7 @@ public:
 	IplImage * img;
 	IplImage * gray;
 	uchar * IMG_data;
-	ARtagLocalizer ar;
+	ARtagLocalizer * ar;
 	
 private:
 	int _sock;

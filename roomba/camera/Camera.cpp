@@ -18,10 +18,12 @@ Camera::Camera(int remoteSock, struct sockaddr_in & videoPort, struct sockaddr_i
 	_sock = remoteSock;
 	_videoPort = videoPort;
 	_artagPort = artagPort;
+	ar = new ARtagLocalizer();
 }
 
 Camera::~Camera()
 {
+	delete ar;
 }
 
 void Camera::SendImage(IplImage * image)
@@ -39,10 +41,10 @@ void Camera::SendARtag()
 {
 	Packet packet;
 	packet.type = DATA;
-	int numARtags = ar.getARtagSize();
+	int numARtags = ar->getARtagSize();
 	for (int i = 0; i < numARtags; ++i)
 	{
-		ARtag* tag = ar.getARtag(i);
+		ARtag* tag = ar->getARtag(i);
 		packet.u.data.tagId = tag->getId();
 		cv::Mat pose = tag->getPose();
 		packet.u.data.x = pose.at<float>(0,3)/1000.f;
@@ -71,7 +73,7 @@ GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data)
 	cvCvtColor(camera->img,camera->gray,CV_BGR2GRAY);
 
 	//detect a image ...
-	if(!camera->ar.getARtagPose(camera->gray, camera->img, 0))
+	if(!camera->ar->getARtagPose(camera->gray, camera->img, 0))
 	{
 //		printf("No artag in the view.\n");
 	}
@@ -184,10 +186,10 @@ int Camera::StreamARtagVideo()
 	loop = g_main_loop_new(NULL,FALSE);
 
 	// Initializing ARtagLocalizer
-	if (ar.initARtagPose(320, 240, 180.f) != 0)
+	if (ar->initARtagPose(320, 240, 180.f) != 0)
 	{
 		printf("Failed to init ARtagLocalizer!\n");
-		pthread_exit(NULL);
+		return 0;
 	}
 	else
 	{
@@ -201,14 +203,14 @@ int Camera::StreamARtagVideo()
 	if (res < 0)
 	{
 		g_printerr("Error configuring pipeline1's string\n");
-		pthread_exit(NULL);
+		return 0;
 	}
 
 	res = sprintf(pipeline2_str, "appsrc name=\"%s\" ! queue ! ffmpegcolorspace ! video/x-raw-rgb, width=%d, height=%d ! ximagesink", APPSRCNAME, IMG_WIDTH, IMG_HEIGHT );
 	if (res < 0)
 	{
 		g_printerr("Error configuring pipeline2's string \n");
-		pthread_exit(NULL);
+		return 0;
 	}
 	
 	//debugging
@@ -219,7 +221,7 @@ int Camera::StreamARtagVideo()
 	if (error)
 	{
 		g_printerr("Error [%s]\n",error->message);
-		pthread_exit(NULL);
+		return 0;
 	}
 
 	//debugging
@@ -230,19 +232,19 @@ int Camera::StreamARtagVideo()
 	if (error)
 	{
 		g_printerr("Error [%s]\n",error->message);
-		pthread_exit(NULL);
+		return 0;
 	}
 
 	if (!gst_bin_get_by_name( GST_BIN(pipeline1), APPSINKNAME))
 	{
 		g_printerr("Error creating app-sink\n");
-		pthread_exit(NULL);
+		return 0;
 	}
 
 	if (!gst_bin_get_by_name( GST_BIN(pipeline2), APPSRCNAME))
 	{
 		g_printerr("error creating app-src\n");
-		pthread_exit(NULL);
+		return 0;
 	}
 
 	// Adding msg handler to Pipeline1
@@ -296,7 +298,6 @@ int Camera::StreamARtagVideo()
 	//unref mainloop
 	g_main_loop_unref(loop);
 
-	pthread_exit(NULL);
 	return 0;
 }
 

@@ -34,6 +34,7 @@ struct sockaddr_in remoteARtag;
 struct sockaddr_in remoteCreate;
 
 Camera * camera;
+pthread_t sensorThread;
 
 void error(const char *msg)
 {
@@ -48,7 +49,8 @@ void debugMsg(const char *func, const char *msg)
 
 void* RunARtagVideo(void* arg)
 {
-	return (void*) camera->StreamARtagVideo();
+	camera->StreamARtagVideo();
+	pthread_exit(NULL);
 }
 
 void* StreamSensorData(void* arg)
@@ -80,6 +82,8 @@ void* StreamSensorData(void* arg)
 	}
 	debugMsg(__func__, "End of streaming sensor data");
 	isInit = false;
+	
+	pthread_join(artagThread, NULL);
 	delete camera;
 	pthread_exit(NULL);
 }
@@ -108,7 +112,6 @@ void MakeConnection(Packet & packet)
 
 	connectedHost = packet.addr.s_addr;
 	
-	pthread_t sensorThread;
 	printf("Sensor Thread: %d.\n", 
 		pthread_create(&sensorThread, NULL, StreamSensorData, (void*)&packet.addr.s_addr));
 }
@@ -130,6 +133,7 @@ void ProcessPackets(Packet & packet)
 				pthread_mutex_lock( &endMutex );
 				isEnding = true;
 				pthread_mutex_unlock( &endMutex );
+				pthread_join(sensorThread, NULL);
 			}
 			break;
 		case CTRL:
