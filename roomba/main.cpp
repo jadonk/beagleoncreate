@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <pthread.h>
+#include <sys/resource.h>
 
 #include "Packet.h"
 #include "control/Control.h"
@@ -44,8 +45,8 @@ struct sockaddr_in remoteSonar;
 Camera * camera;
 Create * create;
 Sonar * sonar1;
-Sonar * sonar2;
-Sonar * sonar3;
+//Sonar * sonar2;
+//Sonar * sonar3;
 
 void error(const char *msg)
 {
@@ -102,8 +103,8 @@ void* SonarSender(void* arg)
 {
 	setpriority(PRIO_PROCESS, 0, -20);
 	float dist1 = -1.f;
-	float dist2 = -1.f;
-	float dist3 = -1.f;
+	//float dist2 = -1.f;
+	//float dist3 = -1.f;
 	Packet packet;
 	packet.type = SONAR;
 	
@@ -170,7 +171,7 @@ void* StreamSensorData(void* arg)
 			connectedHost = 0;
 			camera->QuitMainLoop();
 			create->isEnding = true;
-			sonar->isEnding = true;
+			sonar1->isEnding = true;
 			break;
 		}
 		pthread_mutex_unlock( &endMutex );
