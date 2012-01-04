@@ -171,7 +171,7 @@ int Camera::StreamARtagVideo()
 	GstBus *bus = NULL;
 	GstAppSinkCallbacks callbacks;
 	gchar pipeline1_str[256];
-	gchar pipeline2_str[256];
+	//gchar pipeline2_str[256];
 
 	// OpenCV stuff...
 	int nChannels = 3;
@@ -206,12 +206,12 @@ int Camera::StreamARtagVideo()
 		return 0;
 	}
 
-	res = sprintf(pipeline2_str, "appsrc name=\"%s\" ! queue ! ffmpegcolorspace ! video/x-raw-rgb, width=%d, height=%d ! ximagesink", APPSRCNAME, IMG_WIDTH, IMG_HEIGHT );
+	/*res = sprintf(pipeline2_str, "appsrc name=\"%s\" ! queue ! ffmpegcolorspace ! video/x-raw-rgb, width=%d, height=%d ! ximagesink", APPSRCNAME, IMG_WIDTH, IMG_HEIGHT );
 	if (res < 0)
 	{
 		g_printerr("Error configuring pipeline2's string \n");
 		return 0;
-	}
+	}*/
 	
 	//debugging
 	//g_print("%s\n",pipeline1_str);
@@ -227,13 +227,13 @@ int Camera::StreamARtagVideo()
 	//debugging
 	//g_print("%s\n",pipeline2_str);
 	//creating pipeline2
-	pipeline2 = gst_parse_launch(pipeline2_str, &error);
+	/*pipeline2 = gst_parse_launch(pipeline2_str, &error);
 
 	if (error)
 	{
 		g_printerr("Error [%s]\n",error->message);
 		return 0;
-	}
+	}*/
 
 	if (!gst_bin_get_by_name( GST_BIN(pipeline1), APPSINKNAME))
 	{
@@ -241,11 +241,11 @@ int Camera::StreamARtagVideo()
 		return 0;
 	}
 
-	if (!gst_bin_get_by_name( GST_BIN(pipeline2), APPSRCNAME))
+	/*if (!gst_bin_get_by_name( GST_BIN(pipeline2), APPSRCNAME))
 	{
 		g_printerr("error creating app-src\n");
 		return 0;
-	}
+	}*/
 
 	// Adding msg handler to Pipeline1
 	//g_print("Adding msg handler to %s\n", gst_element_get_name(pipeline1));
@@ -255,9 +255,9 @@ int Camera::StreamARtagVideo()
 
 	// Adding msg handler to Pipeline1
 	//g_print("Adding msg handler to %s\n",gst_element_get_name(pipeline2));
-	bus = gst_pipeline_get_bus( GST_PIPELINE(pipeline2) );
+	/*bus = gst_pipeline_get_bus( GST_PIPELINE(pipeline2) );
 	gst_bus_add_watch(bus, bus_call, gst_element_get_name(pipeline2));
-	gst_object_unref(bus);
+	gst_object_unref(bus);*/
 
 	//configuring AppSink's callback  (Pipeline1)
 	callbacks.eos = NULL;
@@ -271,7 +271,7 @@ int Camera::StreamARtagVideo()
 
 	//Set the pipeline2 to "playing" state
 	//g_print("Setting pipeline2's state to \"playing\".\n");
-	gst_element_set_state(pipeline2, GST_STATE_PLAYING);
+	//gst_element_set_state(pipeline2, GST_STATE_PLAYING);
 
 	// Iterate
 	//g_print("Running...\n");
@@ -283,13 +283,13 @@ int Camera::StreamARtagVideo()
 	gst_element_set_state(pipeline1, GST_STATE_NULL);
 
 	//g_print("Stopping playback - pipeline2\n");
-	gst_element_set_state(pipeline2, GST_STATE_NULL);
+	//gst_element_set_state(pipeline2, GST_STATE_NULL);
 
 	//g_print("Deleting pipeline1.\n");
 	gst_object_unref( GST_OBJECT(pipeline1) );
 
 	//g_print("Deleting pipeline2.\n");
-	gst_object_unref( GST_OBJECT(pipeline2) );
+	//gst_object_unref( GST_OBJECT(pipeline2) );
 
 	//deleting image
 	cvReleaseImage(&img);
