@@ -6,6 +6,7 @@
 #include <iostream>
 #include <termios.h>
 #include <fcntl.h>
+#include <poll.h>
 
 #include "Packet.h"
 #include "Create.h"
@@ -187,7 +188,10 @@ int Create::RunUDPListener(int & sock)
 	while(1)
 	{
 		if (isEnding)
+		{
+			printf("RunUDPListener received Ending flag\n");
 			break;
+		}
 			
 		bzero(&buf, sizeof(buf));
 		//bufLength = recvfrom(sock, buf, MAXPACKETSIZE, 

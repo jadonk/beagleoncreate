@@ -46,8 +46,8 @@ struct sockaddr_in remoteSonar;
 Camera * camera;
 Create * create;
 Sonar * sonar1;
-//Sonar * sonar2;
-//Sonar * sonar3;
+Sonar * sonar2;
+Sonar * sonar3;
 
 void error(const char *msg)
 {
@@ -104,8 +104,8 @@ void* SonarSender(void* arg)
 {
 	setpriority(PRIO_PROCESS, 0, -20);
 	float dist1 = -1.f;
-	//float dist2 = -1.f;
-	//float dist3 = -1.f;
+	float dist2 = -1.f;
+	float dist3 = -1.f;
 	Packet packet;
 	packet.type = SONAR;
 	
@@ -115,14 +115,17 @@ void* SonarSender(void* arg)
 			break;
 		
 		dist1 = sonar1->Run();	
-		//dist2 = sonar2->Run();	
-		//dist3 = sonar3->Run();			
-		if (dist1 != -1.f)// && dist2 != -1.f && dist3 != -1.f)
+		usleep(SONAR_WAIT_TIME);
+		dist2 = sonar2->Run();	
+		usleep(SONAR_WAIT_TIME);
+		dist3 = sonar3->Run();			
+		usleep(SONAR_WAIT_TIME);
+		if (dist1 != -1.f )//&& dist2 != -1.f && dist3 != -1.f)
 		{
 			// send out dist
 			packet.u.sonar.dist1 = dist1;
-			//packet.u.sonar.dist2 = dist2;
-			//packet.u.sonar.dist3 = dist3;
+			packet.u.sonar.dist2 = dist2;
+			packet.u.sonar.dist3 = dist3;
 			if (sendto(remoteSock, (unsigned char*)&packet, sizeof(packet), 0, (const struct sockaddr *)&remoteSonar, sizeof(struct sockaddr_in)) < 0) printf("sendto\n");
 		}
 		usleep(SONAR_MEASURE_RATE);
@@ -138,8 +141,8 @@ void* StreamSensorData(void* arg)
 	camera = new Camera(remoteSock, remoteVideo, remoteARtag);
 	create = new Create(remoteSock, remoteCreate, connectedHost);
 	sonar1 = new Sonar(SONAR_GPIO1);
-	//sonar2 = new Sonar(SONAR_GPIO2);
-	//sonar3 = new Sonar(SONAR_GPIO3);
+	sonar2 = new Sonar(SONAR_GPIO2);
+	sonar3 = new Sonar(SONAR_GPIO3);
 
 	// run camera
 	pthread_t cameraThread;
@@ -180,14 +183,18 @@ void* StreamSensorData(void* arg)
 	isInit = false;
 	
 	pthread_join(cameraThread, NULL);
+	debugMsg(__func__, "cameraThread halted");
 	pthread_join(createSerialThread, NULL);
+	debugMsg(__func__, "createSerialThread halted");
 	pthread_join(createUDPThread, NULL);
+	debugMsg(__func__, "createUDPThread halted");
 	pthread_join(sonarThread, NULL);
+	debugMsg(__func__, "sonarThread halted");
 	delete camera;
 	delete create;
 	delete sonar1;
-	//delete sonar2;
-	//delete sonar3;
+	delete sonar2;
+	delete sonar3;
 	debugMsg(__func__, "End of streaming sensor data.");
 	pthread_exit(NULL);
 }

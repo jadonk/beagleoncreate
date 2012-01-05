@@ -5,7 +5,10 @@
 #include <time.h>
 #include "Gpio.h"
 
+// time in usec before next measurement
 #define SONAR_MEASURE_RATE 100000
+// time in usec before switch to other sonar
+#define SONAR_WAIT_TIME	10000
 
 class Sonar
 {
