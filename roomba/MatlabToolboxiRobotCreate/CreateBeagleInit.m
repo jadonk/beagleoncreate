@@ -43,7 +43,8 @@ fopen(ports.beagle);
 fopen(ports.beacon);
 fopen(ports.sonar);
 
-BeagleInit(ports);
+fwrite(ports.beagle,PacketType.INIT);
+pause(.5)
 %% Confirm two way connumication
 disp('Setting iRobot Create to Control Mode...');
 % Start! and see if its alive

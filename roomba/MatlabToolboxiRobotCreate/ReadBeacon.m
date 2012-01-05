@@ -26,6 +26,7 @@ out.z = NaN;
 out.yaw = NaN;
 try
     fclose(ports.beacon);
+    pause(.01);
     fopen(ports.beacon);
 
     %read in packet and get size

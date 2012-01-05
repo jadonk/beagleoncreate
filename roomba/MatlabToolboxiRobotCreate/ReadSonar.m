@@ -29,6 +29,7 @@ dist.sonar2 = NaN;
 dist.sonar3 = NaN;
 try
     fclose(ports.sonar);
+    pause(.01);
     fopen(ports.sonar);
 
 	[packet size] = fread(ports.sonar);
@@ -52,8 +53,9 @@ try
             dist.sonar3 = NaN;
         end
     end
-catch
+catch err
     disp('WARNING:  Function did not terminate correctly.  Output may be unreliable.')
+    err.identifier
 end
 
 end
