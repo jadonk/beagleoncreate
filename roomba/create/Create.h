@@ -16,7 +16,7 @@ public:
 	void CloseSerial();
 	void SendSerial(char* buf, int bufLength);
 	int RunSerialListener();
-	int RunUDPListener();
+	int RunUDPListener(int & sock);
 	
 	bool isEnding;
 
@@ -25,6 +25,8 @@ private:
 	int _sock;
 	struct sockaddr_in _createPort;
 	unsigned long _connectedHost;
+
+	int InitUDPListener();
 };
 
 #endif

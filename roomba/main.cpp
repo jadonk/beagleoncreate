@@ -36,6 +36,7 @@ bool isInit = false;
 bool isEnding = false;
 unsigned long connectedHost = 0;
 int remoteSock;
+int createUDPsock = -1;
 struct sockaddr_in remoteVideo;
 struct sockaddr_in remoteARtag;
 struct sockaddr_in remoteCreate;
@@ -95,7 +96,7 @@ void* CreateSerialListener(void* arg)
 
 void* CreateUDPListener(void* arg)
 {
-	create->RunUDPListener();
+	create->RunUDPListener(createUDPsock);
 	pthread_exit(NULL);
 }
 
@@ -132,12 +133,10 @@ void* SonarSender(void* arg)
 void* StreamSensorData(void* arg)
 {
 	debugMsg(__func__, "Start streaming sensor data ...");
-	unsigned long addr = *((unsigned long*) arg);
-	printf("[%s	] addr: %d\n", __func__, (int)addr);
 	isInit = true;
 	
 	camera = new Camera(remoteSock, remoteVideo, remoteARtag);
-	create = new Create(remoteSock, remoteCreate, addr);
+	create = new Create(remoteSock, remoteCreate, connectedHost);
 	sonar1 = new Sonar(SONAR_GPIO1);
 	//sonar2 = new Sonar(SONAR_GPIO2);
 	//sonar3 = new Sonar(SONAR_GPIO3);
@@ -148,13 +147,13 @@ void* StreamSensorData(void* arg)
 		pthread_create(&cameraThread, NULL, RunARtagVideo, NULL));
 	
 	// run create control	
-	/*pthread_t createSerialThread;
+	pthread_t createSerialThread;
 	printf("iRobot Create SerialListner Thread: %d.\n", 
 		pthread_create(&createSerialThread, NULL, CreateSerialListener, NULL));
 	
 	pthread_t createUDPThread;
 	printf("iRobot Create UDPListner Thread: %d.\n", 
-		pthread_create(&createUDPThread, NULL, CreateUDPListener, NULL));*/
+		pthread_create(&createUDPThread, NULL, CreateUDPListener, NULL));
 		
 	// run sonar
 	pthread_t sonarThread;
@@ -181,8 +180,8 @@ void* StreamSensorData(void* arg)
 	isInit = false;
 	
 	pthread_join(cameraThread, NULL);
-	//pthread_join(createSerialThread, NULL);
-	//pthread_join(createUDPThread, NULL);
+	pthread_join(createSerialThread, NULL);
+	pthread_join(createUDPThread, NULL);
 	pthread_join(sonarThread, NULL);
 	delete camera;
 	delete create;
@@ -223,7 +222,7 @@ void MakeConnection(Packet & packet)
 
 	pthread_t sensorThread;
 	printf("Sensor Thread: %d.\n", 
-		pthread_create(&sensorThread, NULL, StreamSensorData, (void*)&packet.addr.s_addr));
+		pthread_create(&sensorThread, NULL, StreamSensorData, NULL));
 }
 
 void ProcessPackets(Packet & packet)

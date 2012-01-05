@@ -113,12 +113,12 @@ int Create::RunSerialListener()
 		max_fd = _fd + 1;
 		
 		/* Initialize the timeout structure */
-		timeout.tv_sec  = 10;
+		timeout.tv_sec  = 1;
 		timeout.tv_usec = 0;
 
 		/* Do the select */
-		//ret = select(max_fd, &input, NULL, NULL, &timeout);
-		ret = select(max_fd, &input, NULL, NULL, NULL);
+		ret = select(max_fd, &input, NULL, NULL, &timeout);
+		//ret = select(max_fd, &input, NULL, NULL, NULL);
 
 		/* See if there was an error */
 		if (ret < 0)
@@ -142,14 +142,24 @@ int Create::RunSerialListener()
 	return 0;
 }
 
-int Create::RunUDPListener()
+int timeout_recvfrom(int sock, void *data, int len, struct sockaddr * sockfrom, socklen_t *fromlen, int timeoutInSec)
 {
-	int sock, bufLength;
-	socklen_t serverlen, fromlen;
-	struct sockaddr_in server;
-	struct sockaddr_in from;
-	char buf[MAXPACKETSIZE];
+	fd_set socks;
+	struct timeval timeout;
+	FD_ZERO(&socks);
+	FD_SET(sock, &socks);
+	timeout.tv_sec = timeoutInSec;
+	if (select(sock + 1, &socks, NULL, NULL, &timeout))
+		return recvfrom(sock, data, len, 0, sockfrom, fromlen);
+	else
+		return 0;
+}
 
+int Create::InitUDPListener()
+{
+	int sock;
+	socklen_t serverlen;
+	struct sockaddr_in server;
 	// initialize udp listener
 	sock = socket(AF_INET, SOCK_DGRAM, 0);
 	if (sock < 0) printf("ERROR: Opening socket\n");
@@ -160,8 +170,19 @@ int Create::RunUDPListener()
 	server.sin_port = htons(CREATE_PORT);
 	if (bind(sock, (struct sockaddr *)&server, serverlen) < 0) 
 		printf("ERROR: binding\n");
-	fromlen = sizeof(struct sockaddr_in);
+	return sock;
+}
 
+int Create::RunUDPListener(int & sock)
+{
+	int bufLength;
+	socklen_t fromlen;
+	struct sockaddr_in from;
+	char buf[MAXPACKETSIZE];
+
+	if (sock == -1)	sock = InitUDPListener();
+
+	fromlen = sizeof(struct sockaddr_in);
 	printf("Ready to listen to Create message ...\n");
 	while(1)
 	{
@@ -169,8 +190,11 @@ int Create::RunUDPListener()
 			break;
 			
 		bzero(&buf, sizeof(buf));
-		bufLength = recvfrom(sock, buf, MAXPACKETSIZE, 
-				0, (struct sockaddr *)&from, &fromlen);
+		//bufLength = recvfrom(sock, buf, MAXPACKETSIZE, 
+		//		0, (struct sockaddr *)&from, &fromlen);
+		bufLength = timeout_recvfrom(sock, buf, MAXPACKETSIZE, 
+				(struct sockaddr *) &from, &fromlen, 1);
+		if (bufLength == 0) continue;
 		if (bufLength < 0) printf("ERROR: recvfrom\n");
 	
 		if (_connectedHost != from.sin_addr.s_addr)
@@ -179,7 +203,6 @@ int Create::RunUDPListener()
 		SendSerial(buf, bufLength);
 	}
 	CloseSerial();
-
-	printf("Ending RunUDPListener");
+	printf("Ending RunUDPListener \n");
 	return 0;
 }
