@@ -80,7 +80,7 @@ void Create::SendSerial(char* buf, int bufLength)
 		printf("ERROR: write error occured.\n");
 		return;
 	}
-	printf("bufLength: %d\n", bufLength);
+	printf("Sending to Create: \n");
 	for (int i = 0; i < bufLength; i++)
 	{
 		printf("%i ", int(buf[i]));
@@ -131,11 +131,12 @@ int Create::RunSerialListener()
 			{
 				bufLength = read(_fd, buf, MAXPACKETSIZE);
 				if (sendto(_sock, buf, bufLength, 0, (const struct sockaddr *) &_createPort, sizeof(struct sockaddr_in)) < 0) printf("ERROR: sendto\n");
+				printf("Received from Create: \n");
 				for (int i = 0; i < bufLength; i++)
 				{	
 					printf("%i ", int(buf[i]));
 				}
-				//printf("%c", buf[0]);
+				printf("\n");
 			}
 		}
 		fflush(stdout);
