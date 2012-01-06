@@ -33,7 +33,8 @@ try
     if size ~= 0 && showplot ~= 0
         imshow(image,'DisplayRange',[0 255])
     end
-catch
+catch err
     disp('WARNING:  Function did not terminate correctly.  Output may be unreliable.')
+%     rethrow(err);
 end
 end

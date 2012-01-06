@@ -17,13 +17,14 @@ function out = ReadBeacon(ports)
 % By: Chuck Yang, ty244, 2012
 
 warning off all;
-
+MAXARTAGSEEN = 10;
+HEADER = 12;
 % Initialize preliminary return value
-out.id = NaN;
-out.x = NaN;
-out.y = NaN;
-out.z = NaN;
-out.yaw = NaN;
+out.id(1:MAXARTAGSEEN) = NaN;
+out.x(1:MAXARTAGSEEN) = 0;
+out.y(1:MAXARTAGSEEN) = 0;
+out.z(1:MAXARTAGSEEN) = 0;
+out.yaw(1:MAXARTAGSEEN) = 0;
 try
     fclose(ports.beacon);
     pause(.01);
@@ -32,11 +33,22 @@ try
     %read in packet and get size
     [packet size] = fread(ports.beacon);
     if size > 15
-        dist.id = typecast(uint8(packet(13:16)),'int32');
-        dist.x = typecast(uint8(packet(17:20)),'single');
-        dist.y = typecast(uint8(packet(21:24)),'single');
-        dist.z = typecast(uint8(packet(25:28)),'single');
-        dist.yaw = typecast(uint8(packet(29:32)),'single');
+        for i = 1:MAXARTAGSEEN
+            idIndex = HEADER+(i-1)*4+1;
+            out.id(i) = typecast(uint8(packet(idIndex:idIndex+3)),'int32');
+            if out.id(i) == 0
+                out.id(i) = NaN;
+                break;
+            end
+            xIndex = idIndex+4*MAXARTAGSEEN;
+            out.x(i) = typecast(uint8(packet(xIndex:xIndex+3)),'single');
+            yIndex = xIndex+4*MAXARTAGSEEN;
+            out.y(i) = typecast(uint8(packet(yIndex:yIndex+3)),'single');
+            zIndex = yIndex+4*MAXARTAGSEEN;
+            out.z(i) = typecast(uint8(packet(zIndex:zIndex+3)),'single');
+            yawIndex = zIndex+4*MAXARTAGSEEN;
+            out.yaw(i) = typecast(uint8(packet(yawIndex:yawIndex+3)),'single');
+        end
     end
 catch
     disp('WARNING:  Function did not terminate correctly.  Output may be unreliable.')
