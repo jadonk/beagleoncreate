@@ -133,6 +133,14 @@ void* SonarSender(void* arg)
 	pthread_exit(NULL);
 }
 
+void* Dumbload(void* arg)
+{
+	while(1)
+	{
+	}
+	pthread_exit(NULL);
+}
+
 void* StreamSensorData(void* arg)
 {
 	debugMsg(__func__, "Start streaming sensor data ...");
@@ -162,6 +170,11 @@ void* StreamSensorData(void* arg)
 	pthread_t sonarThread;
 	printf("Sonar Thread: %d.\n", 
 		pthread_create(&sonarThread, NULL, SonarSender, NULL));
+
+	// run dumbload
+	/*pthread_t dumbloadThread;
+	printf("dumbload Thread: %d.\n", 
+		pthread_create(&dumbloadThread, NULL, Dumbload, NULL));*/
 	
 	while(1)
 	{
