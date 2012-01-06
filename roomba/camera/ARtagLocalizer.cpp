@@ -7,8 +7,6 @@ using namespace std;
 const float THIN_PATTERN_BORDER = 0.125;
 const float THICK_PATTERN_BORDER = 0.25;
 
-ARtag * ARtagLocalizer::tags[50];
-//CRITICAL_SECTION ARtagLocalizer::tags_mutex;
 bool ARtagLocalizer::allStop = false;
 char calibFilename[] = "MS_LifeCam_VX700.cal";
 
@@ -23,20 +21,10 @@ ARtagLocalizer::ARtagLocalizer()
 	xoffset = 0;
 	yoffset = 0;
 	fudge = 0.97;
-	for (int n = 0; n < 50; ++n)
-	{
-		tags[n] = new ARtag();
-	}
-//	InitializeCriticalSection(&tags_mutex);
 }
 
 ARtagLocalizer::~ARtagLocalizer()
 {
-	for (int n = 0; n < 50; ++n)
-	{
-		delete tags[n];
-	}
-//	DeleteCriticalSection (&tags_mutex);
 }
 
 int ARtagLocalizer::initARtagPose(int width, int height, float markerWidth, float x_offset, float y_offset, float yaw_offset, float ffactor)
@@ -158,14 +146,8 @@ bool ARtagLocalizer::getARtagPose(IplImage* src, IplImage* dst, int camID)
 			CvMat pose = PoseM;
 
 			// save artag struct for access later
-			if (markers[m].id >= 0 && markers[m].id < 50 && !allStop)
+			if (markers[m].id >= 0 && markers[m].id <= ARTAG_MAX_ID && !allStop)
 			{
-				ARtag * ar = tags[markers[m].id];
-				ar->setId(markers[m].id);
-				ar->setPose(&pose);
-				ar->setPoseAge(0);
-				ar->setCamId(camID);
-
 				ARtag mt;
 				mt.setId(markers[m].id);
 				mt.setPose(&pose);

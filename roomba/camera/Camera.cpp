@@ -6,7 +6,7 @@
 #include <iostream>
 #include <pthread.h>
 
-#include "Packet.h"
+#include "../Packet.h"
 #include "Camera.h"
 
 #define NCHANNELS 3
@@ -42,23 +42,25 @@ void Camera::SendImage(IplImage * image)
 void Camera::SendARtag()
 {
 	Packet packet;
+	memset(&packet, 0, sizeof(packet));
 	packet.type = DATA;
 	int numARtags = ar->getARtagSize();
+	numARtags = numARtags < MAXARTAGSEEN ? numARtags:MAXARTAGSEEN;
 	for (int i = 0; i < numARtags; ++i)
 	{
 		ARtag* tag = ar->getARtag(i);
-		packet.u.data.tagId = tag->getId();
+		packet.u.data.tagId[i] = tag->getId();
 		cv::Mat pose = tag->getPose();
-		packet.u.data.x = pose.at<float>(0,3)/1000.f;
-		packet.u.data.y = pose.at<float>(1,3)/1000.f;
-		packet.u.data.z = pose.at<float>(2,3)/1000.f;
-		packet.u.data.yaw = -atan2(pose.at<float>(1,0), pose.at<float>(0,0));
-		if (packet.u.data.yaw < 0)
+		packet.u.data.x[i] = pose.at<float>(0,3)/1000.f;
+		packet.u.data.y[i] = pose.at<float>(1,3)/1000.f;
+		packet.u.data.z[i] = pose.at<float>(2,3)/1000.f;
+		packet.u.data.yaw[i] = -atan2(pose.at<float>(1,0), pose.at<float>(0,0));
+		if (packet.u.data.yaw[i] < 0)
 		{
-			packet.u.data.yaw += 6.28;
+			packet.u.data.yaw[i] += 6.28;
 		}
-		if (sendto(_sock, (unsigned char*)&packet, sizeof(packet), 0, (const struct sockaddr *)&_artagPort, sizeof(struct sockaddr_in)) < 0) printf("sendto\n");
 	}
+	if (sendto(_sock, (unsigned char*)&packet, sizeof(packet), 0, (const struct sockaddr *)&_artagPort, sizeof(struct sockaddr_in)) < 0) printf("sendto\n");
 }
 
 GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data)

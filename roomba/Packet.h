@@ -6,6 +6,7 @@
 #include <netdb.h>
 
 #define MAXPACKETSIZE 5000 
+#define MAXARTAGSEEN 10
 enum PacketType
 {
 	INIT = 1,
@@ -43,11 +44,11 @@ struct Packet
 
 		struct
 		{
-			int tagId;
-			float x;
-			float y;
-			float z;
-			float yaw;
+			int tagId[MAXARTAGSEEN];
+			float x[MAXARTAGSEEN];
+			float y[MAXARTAGSEEN];
+			float z[MAXARTAGSEEN];
+			float yaw[MAXARTAGSEEN];
 		}data;
 
 		struct
@@ -82,3 +83,5 @@ struct Packet
 };
 
 #endif
+
+

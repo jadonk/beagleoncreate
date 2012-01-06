@@ -1,6 +1,8 @@
 #include "ARtag.h"
 #include <ARToolKitPlus/TrackerSingleMarker.h>
 
+#define ARTAG_MAX_ID 99
+
 using ARToolKitPlus::TrackerSingleMarker;
 class ARtagLocalizer
 {
@@ -14,8 +16,6 @@ public:
 	void setARtagOffset(float x_offset, float y_offset, float yaw_offset);
 	int cleanupARtagPose(void);
 
-	static ARtag * tags[50];
-//	static CRITICAL_SECTION tags_mutex;
 	static bool allStop;
 	
 private:
