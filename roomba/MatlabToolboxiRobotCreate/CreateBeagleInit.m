@@ -65,6 +65,6 @@ fwrite(ports.create, [141 1])
 
 disp('I am alive if my two outboard lights came on')
 
-confirmation = (fread(ports.create,4))
+% confirmation = (fread(ports.create,4))
 pause(.1)
 end
