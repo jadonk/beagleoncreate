@@ -45,7 +45,7 @@ try
             % Update the orientation based on the angle sensor (dead reckoning!)
             dangle = AngleSensorRoomba(ports.create);
             if ~isempty(dangle)
-                orient = orient + dangle
+                orient = orient + dangle;
             end
         end
         
@@ -64,8 +64,8 @@ try
             
 %             plot(d.sonar3*cos(orient+pi/4), d.sonar3*sin(orient+pi/4), 'x', 'MarkerSize', 10);
 
-            ylim([-5, 5])
-            xlim([-5, 5])
+            ylim([-1, 1])
+            xlim([-1, 1])
         else
             plot(x, d.sonar1, 'xr', x, d.sonar2, 'xg', x, d.sonar3, 'xb', 'MarkerSize', 10);
             ylim([0, 3])
