@@ -8,19 +8,20 @@
 #include <fcntl.h>
 #include <poll.h>
 
-#include "Packet.h"
 #include "Create.h"
 
 #define CREATE_SERIAL_PORT "/dev/ttyUSB0"
 #define CREATE_SERIAL_BRATE B57600
 
-Create::Create(int sock, struct sockaddr_in & createPort, unsigned long connectedHost)
+Create::Create(int sock, struct sockaddr_in & createPort, unsigned long connectedHost, pthread_mutex_t & bufMutex)
 {
 	_fd = -1;
 	_sock = sock;
 	_createPort = createPort;
 	_connectedHost = connectedHost;
 	isEnding = false;
+	_bufMutex = bufMutex;
+	_bufLength = 0;
 	InitSerial();
 }
 
@@ -68,24 +69,43 @@ void Create::CloseSerial()
 	close(_fd);
 }
 
-void Create::SendSerial(char* buf, int bufLength)
+void Create::SendSerial()
 {
+	int bufLength = 0;
+	char buf[MAXPACKETSIZE];
 	if (_fd == -1)
 	{
 		printf("ERROR: _fd is not initialized\n");
 		return;
 	}
-	if (write(_fd, buf, bufLength) == -1)
+
+	while(1)
 	{
-		printf("ERROR: write error occured.\n");
-		return;
+		usleep(100);
+
+		if (isEnding)
+			break;
+	
+		pthread_mutex_lock( &_bufMutex);
+		bufLength = _bufLength;
+		memcpy(buf, _buf, bufLength);
+		_bufLength = 0;
+		pthread_mutex_unlock( &_bufMutex);
+		if (bufLength == 0)
+			continue;
+
+		if (write(_fd, buf, bufLength) == -1)
+		{
+			printf("ERROR: write error occured.\n");
+			return;
+		}
+		printf("Sending to Create: \n");
+		for (int i = 0; i < bufLength; i++)
+		{
+			printf("%i ", int(buf[i]));
+		}
+		printf("\n");
 	}
-	printf("Sending to Create: \n");
-	for (int i = 0; i < bufLength; i++)
-	{
-		printf("%i ", int(buf[i]));
-	}
-	printf("\n");
 }
 
 int Create::RunSerialListener()
@@ -177,7 +197,7 @@ int Create::InitUDPListener()
 
 int Create::RunUDPListener(int & sock)
 {
-	int bufLength;
+	int len;
 	socklen_t fromlen;
 	struct sockaddr_in from;
 	char buf[MAXPACKETSIZE];
@@ -193,19 +213,23 @@ int Create::RunUDPListener(int & sock)
 			printf("RunUDPListener received Ending flag\n");
 			break;
 		}
-			
+		
 		bzero(&buf, sizeof(buf));
-		//bufLength = recvfrom(sock, buf, MAXPACKETSIZE, 
+		//len = recvfrom(sock, buf, MAXPACKETSIZE, 
 		//		0, (struct sockaddr *)&from, &fromlen);
-		bufLength = timeout_recvfrom(sock, buf, MAXPACKETSIZE, 
+		len = timeout_recvfrom(sock, buf, MAXPACKETSIZE, 
 				(struct sockaddr *) &from, &fromlen, 1);
-		if (bufLength == 0) continue;
-		if (bufLength < 0) printf("ERROR: recvfrom\n");
+		if (len == 0) continue;
+		if (len < 0) printf("ERROR: recvfrom\n");
 	
 		if (_connectedHost != from.sin_addr.s_addr)
 			continue;
 
-		SendSerial(buf, bufLength);
+		pthread_mutex_lock( &_bufMutex);	
+		memcpy(_buf + _bufLength, buf, len);
+		_bufLength += len;
+		pthread_mutex_unlock( &_bufMutex);
+		//SendSerial(buf, bufLength);
 	}
 	CloseSerial();
 	printf("Ending RunUDPListener \n");
