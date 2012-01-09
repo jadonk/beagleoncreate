@@ -170,9 +170,9 @@ void* StreamSensorData(void* arg)
 	printf("iRobot Create SerialListner Thread: %d.\n", 
 		pthread_create(&createSerialThread, NULL, CreateSerialListener, NULL));
 	
-	pthread_t createSerialSenderThread;
+	/*pthread_t createSerialSenderThread;
 	printf("iRobotCreate SerialSender Thread: %d.\n",
-		pthread_create(&createSerialSenderThread, NULL, CreateSerialSender, NULL));
+		pthread_create(&createSerialSenderThread, NULL, CreateSerialSender, NULL));*/
 
 	pthread_t createUDPThread;
 	printf("iRobot Create UDPListner Thread: %d.\n", 

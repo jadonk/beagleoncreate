@@ -91,10 +91,12 @@ void Create::SendSerial()
 		memcpy(buf, _buf, bufLength);
 		_bufLength = 0;
 		pthread_mutex_unlock( &_bufMutex);
+
 		if (bufLength == 0)
 			continue;
-
-		if (write(_fd, buf, bufLength) == -1)
+		printf("_fd %d\n", _fd);
+		int ret = write(_fd, buf, bufLength);
+		if (ret == -1)
 		{
 			printf("ERROR: write error occured.\n");
 			return;
@@ -138,6 +140,7 @@ int Create::RunSerialListener()
 		timeout.tv_usec = 0;
 
 		/* Do the select */
+		printf("start select %d\n", _fd);
 		ret = select(max_fd, &input, NULL, NULL, &timeout);
 		//ret = select(max_fd, &input, NULL, NULL, NULL);
 
@@ -149,7 +152,9 @@ int Create::RunSerialListener()
 			/* We have input */
 			if (FD_ISSET(_fd, &input))
 			{
+				printf("we have input\n");
 				bufLength = read(_fd, buf, MAXPACKETSIZE);
+				printf("read done\n");
 				if (sendto(_sock, buf, bufLength, 0, (const struct sockaddr *) &_createPort, sizeof(struct sockaddr_in)) < 0) printf("ERROR: sendto\n");
 				printf("Received from Create: \n");
 				for (int i = 0; i < bufLength; i++)
