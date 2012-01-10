@@ -13,7 +13,7 @@
 #define CREATE_SERIAL_PORT "/dev/ttyUSB0"
 #define CREATE_SERIAL_BRATE B57600
 
-Create::Create(int sock, struct sockaddr_in & createPort, unsigned long connectedHost, pthread_mutex_t & bufMutex)
+Create::Create(int sock, struct sockaddr_in & createPort, unsigned long connectedHost)
 {
 	_fd = -1;
 	_sock = sock;
@@ -139,7 +139,6 @@ int Create::RunSerialListener()
 		timeout.tv_usec = 0;
 
 		/* Do the select */
-		printf("start select %d\n", _fd);
 		ret = select(max_fd, &input, NULL, NULL, &timeout);
 		//ret = select(max_fd, &input, NULL, NULL, NULL);
 
@@ -151,9 +150,7 @@ int Create::RunSerialListener()
 			/* We have input */
 			if (FD_ISSET(_fd, &input))
 			{
-				printf("we have input\n");
 				bufLength = read(_fd, buf, MAXPACKETSIZE);
-				printf("read done\n");
 				if (sendto(_sock, buf, bufLength, 0, (const struct sockaddr *) &_createPort, sizeof(struct sockaddr_in)) < 0) printf("ERROR: sendto\n");
 				printf("Received from Create: \n");
 				for (int i = 0; i < bufLength; i++)
@@ -201,7 +198,7 @@ int Create::InitUDPListener()
 
 int Create::RunUDPListener(int & sock)
 {
-	int len;
+	int bufLength;
 	socklen_t fromlen;
 	struct sockaddr_in from;
 	char buf[MAXPACKETSIZE];
@@ -219,12 +216,12 @@ int Create::RunUDPListener(int & sock)
 		}
 		
 		bzero(&buf, sizeof(buf));
-		//len = recvfrom(sock, buf, MAXPACKETSIZE, 
+		//bufLength = recvfrom(sock, buf, MAXPACKETSIZE, 
 		//		0, (struct sockaddr *)&from, &fromlen);
-		len = timeout_recvfrom(sock, buf, MAXPACKETSIZE, 
+		bufLength = timeout_recvfrom(sock, buf, MAXPACKETSIZE, 
 				(struct sockaddr *) &from, &fromlen, 1);
-		if (len == 0) continue;
-		if (len < 0) printf("ERROR: recvfrom\n");
+		if (bufLength == 0) continue;
+		if (bufLength < 0) printf("ERROR: recvfrom\n");
 	
 		if (_connectedHost != from.sin_addr.s_addr)
 			continue;

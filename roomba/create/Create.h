@@ -12,7 +12,7 @@
 class Create
 {
 public:
-	Create(int sock, struct sockaddr_in & createPort, unsigned long connectedHost, pthread_mutex_t & bufMutex);
+	Create(int sock, struct sockaddr_in & createPort, unsigned long connectedHost);
 	~Create();
 	
 	int InitSerial();

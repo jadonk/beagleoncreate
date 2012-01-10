@@ -49,8 +49,6 @@ Sonar * sonar1;
 Sonar * sonar2;
 Sonar * sonar3;
 
-pthread_mutex_t bufMutex = PTHREAD_MUTEX_INITIALIZER;
-
 void error(const char *msg)
 {
 	perror(msg);
@@ -155,7 +153,7 @@ void* StreamSensorData(void* arg)
 	isInit = true;
 	
 	camera = new Camera(remoteSock, remoteVideo, remoteARtag);
-	create = new Create(remoteSock, remoteCreate, connectedHost, bufMutex);
+	create = new Create(remoteSock, remoteCreate, connectedHost);
 	sonar1 = new Sonar(SONAR_GPIO1);
 	sonar2 = new Sonar(SONAR_GPIO2);
 	sonar3 = new Sonar(SONAR_GPIO3);
@@ -171,13 +169,8 @@ void* StreamSensorData(void* arg)
 		pthread_create(&createSerialThread, NULL, CreateSerialListener, NULL));
 
 	pthread_t createSerialSenderThread;
-	printf("iRobot Create SerialSender Thread: %d. \n",
-		pthread_create(&createSerialSenderThread, NULL, CreateSerialSender, NULL));
-
-	
-	/*pthread_t createSerialSenderThread;
 	printf("iRobotCreate SerialSender Thread: %d.\n",
-		pthread_create(&createSerialSenderThread, NULL, CreateSerialSender, NULL));*/
+		pthread_create(&createSerialSenderThread, NULL, CreateSerialSender, NULL));
 
 	pthread_t createUDPThread;
 	printf("iRobot Create UDPListner Thread: %d.\n", 
