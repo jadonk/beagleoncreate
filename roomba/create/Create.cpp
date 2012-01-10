@@ -20,14 +20,14 @@ Create::Create(int sock, struct sockaddr_in & createPort, unsigned long connecte
 	_createPort = createPort;
 	_connectedHost = connectedHost;
 	isEnding = false;
-	_bufMutex = bufMutex;
-	_bufLength = 0;
+	pthread_mutex_init(&_bufMutex, NULL);
 	InitSerial();
 }
 
 Create::~Create()
 {
 	CloseSerial();
+	pthread_mutex_destroy(&_bufMutex);
 }
 
 int Create::InitSerial()
@@ -85,7 +85,7 @@ void Create::SendSerial()
 
 		if (isEnding)
 			break;
-	
+
 		pthread_mutex_lock( &_bufMutex);
 		bufLength = _bufLength;
 		memcpy(buf, _buf, bufLength);
@@ -94,9 +94,8 @@ void Create::SendSerial()
 
 		if (bufLength == 0)
 			continue;
-		printf("_fd %d\n", _fd);
-		int ret = write(_fd, buf, bufLength);
-		if (ret == -1)
+
+		if (write(_fd, buf, bufLength) == -1)
 		{
 			printf("ERROR: write error occured.\n");
 			return;
@@ -230,11 +229,11 @@ int Create::RunUDPListener(int & sock)
 		if (_connectedHost != from.sin_addr.s_addr)
 			continue;
 
-		pthread_mutex_lock( &_bufMutex);	
-		memcpy(_buf + _bufLength, buf, len);
-		_bufLength += len;
+		pthread_mutex_lock( &_bufMutex);
+		memcpy(_buf + _bufLength, buf, bufLength);
+		_bufLength += bufLength;
 		pthread_mutex_unlock( &_bufMutex);
-		//SendSerial(buf, bufLength);
+		//SendSerial();
 	}
 	CloseSerial();
 	printf("Ending RunUDPListener \n");
