@@ -3,9 +3,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include "pthread.h"
-
-#include "Packet.h"
 
 #define CREATE_PORT 8888
 
@@ -17,7 +14,7 @@ public:
 	
 	int InitSerial();
 	void CloseSerial();
-	void SendSerial();
+	void SendSerial(char* buf, int bufLength);
 	int RunSerialListener();
 	int RunUDPListener(int & sock);
 	
@@ -29,10 +26,6 @@ private:
 	struct sockaddr_in _createPort;
 	unsigned long _connectedHost;
 	
-	pthread_mutex_t _bufMutex;
-	int _bufLength;
-	char _buf[MAXPACKETSIZE];
-
 	int InitUDPListener();
 };
 

@@ -94,12 +94,6 @@ void* CreateSerialListener(void* arg)
 	pthread_exit(NULL);
 }
 
-void* CreateSerialSender(void* arg)
-{
-	create->SendSerial();
-	pthread_exit(NULL);
-}
-
 void* CreateUDPListener(void* arg)
 {
 	create->RunUDPListener(createUDPsock);
@@ -168,10 +162,6 @@ void* StreamSensorData(void* arg)
 	printf("iRobot Create SerialListner Thread: %d.\n", 
 		pthread_create(&createSerialThread, NULL, CreateSerialListener, NULL));
 
-	pthread_t createSerialSenderThread;
-	printf("iRobotCreate SerialSender Thread: %d.\n",
-		pthread_create(&createSerialSenderThread, NULL, CreateSerialSender, NULL));
-
 	pthread_t createUDPThread;
 	printf("iRobot Create UDPListner Thread: %d.\n", 
 		pthread_create(&createUDPThread, NULL, CreateUDPListener, NULL));
@@ -208,7 +198,6 @@ void* StreamSensorData(void* arg)
 	pthread_join(cameraThread, NULL);
 	debugMsg(__func__, "cameraThread halted");
 	pthread_join(createSerialThread, NULL);
-	pthread_join(createSerialSenderThread, NULL);
 	debugMsg(__func__, "createSerialThread halted");
 	pthread_join(createUDPThread, NULL);
 	debugMsg(__func__, "createUDPThread halted");

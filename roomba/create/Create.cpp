@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <poll.h>
 
+#include "Packet.h"
 #include "Create.h"
 
 #define CREATE_SERIAL_PORT "/dev/ttyUSB0"
@@ -20,14 +21,12 @@ Create::Create(int sock, struct sockaddr_in & createPort, unsigned long connecte
 	_createPort = createPort;
 	_connectedHost = connectedHost;
 	isEnding = false;
-	pthread_mutex_init(&_bufMutex, NULL);
 	InitSerial();
 }
 
 Create::~Create()
 {
 	CloseSerial();
-	pthread_mutex_destroy(&_bufMutex);
 }
 
 int Create::InitSerial()
@@ -69,44 +68,28 @@ void Create::CloseSerial()
 	close(_fd);
 }
 
-void Create::SendSerial()
+void Create::SendSerial(char* buf, int bufLength)
 {
-	int bufLength = 0;
-	char buf[MAXPACKETSIZE];
 	if (_fd == -1)
 	{
 		printf("ERROR: _fd is not initialized\n");
 		return;
 	}
 
-	while(1)
+	if (bufLength == 0)
+		return;
+
+	if (write(_fd, buf, bufLength) == -1)
 	{
-		usleep(100);
-
-		if (isEnding)
-			break;
-
-		pthread_mutex_lock( &_bufMutex);
-		bufLength = _bufLength;
-		memcpy(buf, _buf, bufLength);
-		_bufLength = 0;
-		pthread_mutex_unlock( &_bufMutex);
-
-		if (bufLength == 0)
-			continue;
-
-		if (write(_fd, buf, bufLength) == -1)
-		{
-			printf("ERROR: write error occured.\n");
-			return;
-		}
-		printf("Sending to Create: \n");
-		for (int i = 0; i < bufLength; i++)
-		{
-			printf("%i ", int(buf[i]));
-		}
-		printf("\n");
+		printf("ERROR: write error occured.\n");
+		return;
 	}
+	printf("Sending to Create: \n\t\t");
+	for (int i = 0; i < bufLength; i++)
+	{
+		printf("%i ", int(buf[i]));
+	}
+	printf("\n");
 }
 
 int Create::RunSerialListener()
@@ -216,21 +199,18 @@ int Create::RunUDPListener(int & sock)
 		}
 		
 		bzero(&buf, sizeof(buf));
-		//bufLength = recvfrom(sock, buf, MAXPACKETSIZE, 
-		//		0, (struct sockaddr *)&from, &fromlen);
 		bufLength = timeout_recvfrom(sock, buf, MAXPACKETSIZE, 
 				(struct sockaddr *) &from, &fromlen, 1);
+		//bufLength = recvfrom(sock, buf, MAXPACKETSIZE, 
+		//		0, (struct sockaddr *)&from, &fromlen);
+
 		if (bufLength == 0) continue;
 		if (bufLength < 0) printf("ERROR: recvfrom\n");
 	
 		if (_connectedHost != from.sin_addr.s_addr)
 			continue;
 
-		pthread_mutex_lock( &_bufMutex);
-		memcpy(_buf + _bufLength, buf, bufLength);
-		_bufLength += bufLength;
-		pthread_mutex_unlock( &_bufMutex);
-		//SendSerial();
+		SendSerial(buf, bufLength);
 	}
 	CloseSerial();
 	printf("Ending RunUDPListener \n");
