@@ -4,6 +4,7 @@ function [state] = CliffRightSensorRoomba(serPort);
 % Either triggered or not triggered
 
 % By; Joel Esposito, US Naval Academy, 2011
+% Modified by: Chuck Yang, ty244, 2012
 %Initialize Preliminary return values
 state = nan;
 
@@ -18,7 +19,7 @@ end
 warning off
 global td
 
-fwrite(serPort, [142]);  fwrite(serPort,12); 
+fwrite(serPort, [142 12]);
 
 CliffRight = dec2bin(fread(serPort, 1));
 state = bin2dec(CliffRight(end));

@@ -4,6 +4,7 @@ function travelDist(serPort, roombaSpeed, distance);
 %Create foward, negative distances move the Create backwards.
 %roombaSpeed should be between 0.025 and 0.5 m/s
 % By; Joel Esposito, US Naval Academy, 2011
+% Modified by: Chuck Yang, ty244, 2012
 
 try
     
@@ -30,15 +31,24 @@ try
         roombaSpeed = -1 * roombaSpeed;
     end
     
+    [computerType, maxSize, endian] = computer;
+    isLittleEndian = (endian == 'L');
+    
     if (distance ~=0)
-        
-        SetFwdVelRadiusRoomba(serPort, roombaSpeed, inf);
+        FwdVelMM = min( max(roombaSpeed,-.5), .5)*1000;
+        RadiusMM = 32768;
         distanceMM = distance * 1000;
-        fwrite(serPort, [156]);  fwrite(serPort,distanceMM, 'int16');
+        if (isLittleEndian)
+            FwdVelMM = typecast(swapbytes(int16(FwdVelMM)),'uint8');
+            RadiusMM = typecast(swapbytes(int16(RadiusMM)),'uint8');
+            distanceMM = typecast(swapbytes(int16(distanceMM)),'uint8');
+        else
+            FwdVelMM = typecast(int16(FwdVelMM),'uint8');
+            RadiusMM = typecast(int16(RadiusMM),'uint8');
+            distanceMM = typecast(int16(distanceMM),'uint8');
+        end
+        fwrite(serPort, [137 FwdVelMM RadiusMM 156 distanceMM 137 0 0 0 0 154]);
         pause(td)
-        SetFwdVelRadiusRoomba(serPort, 0, 0);
-        pause(td)
-        fwrite(serPort, [154]);
         while( serPort.BytesAvailable() ==0)
             %disp('waiting to finish')
         end

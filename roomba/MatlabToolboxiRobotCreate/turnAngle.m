@@ -7,6 +7,7 @@ function turnAngle(serPort, roombaSpeed, turnAngle);
 %turnAngle should be between +/- 360 degrees
 %roombaSpeed should be between 0 and 0.2 m/s
 % By; Joel Esposito, US Naval Academy, 2011
+% Modified by: Chuck Yang, ty244, 2012
 
 try
     
@@ -51,20 +52,28 @@ try
         turnAngle = turnAngle + 360;
     end
     
-    if (turnAngle < 0 ) % Makes sure the robot turns in the right direction
-        turnDir = -eps;
-    else
-        turnDir = eps;
-    end
+    [computerType, maxSize, endian] = computer;
+    isLittleEndian = (endian == 'L');
     
     if turnAngle ~=0
+        if (turnAngle < 0 ) % Makes sure the robot turns in the right direction
+            RadiusMM = -1;
+        else
+            RadiusMM = 1;
+        end
         
-        SetFwdVelRadiusRoomba(serPort, roombaSpeed, turnDir);
-        fwrite(serPort, [157]);  fwrite(serPort,turnAngle, 'int16');
+        FwdVelMM = min( max(roombaSpeed,-.5), .5)*1000;
+        if (isLittleEndian)
+            FwdVelMM = typecast(swapbytes(int16(FwdVelMM)),'uint8');
+            RadiusMM = typecast(swapbytes(int16(RadiusMM)),'uint8');
+            turnAngle = typecast(swapbytes(int16(turnAngle)),'uint8');
+        else
+            FwdVelMM = typecast(int16(FwdVelMM),'uint8');
+            RadiusMM = typecast(int16(RadiusMM),'uint8');
+            turnAngle = typecast(int16(turnAngle),'uint8');
+        end
+        fwrite(serPort, [137 FwdVelMM RadiusMM 157 turnAngle 137 0 0 0 0 154]);
         pause(td)
-        SetFwdVelRadiusRoomba(serPort, 0, 0);
-        pause(td)
-        fwrite(serPort, [154]);
         while( serPort.BytesAvailable() ==0)
             %disp('waiting to finish')
         end
@@ -73,5 +82,5 @@ try
         
     end
 catch
-            disp('WARNING:  function did not terminate correctly.  Output may be unreliable.')
-    end
+    disp('WARNING:  function did not terminate correctly.  Output may be unreliable.')
+end

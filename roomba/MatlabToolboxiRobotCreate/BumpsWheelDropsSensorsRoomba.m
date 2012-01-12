@@ -4,6 +4,7 @@ function [BumpRight,BumpLeft,WheDropRight,WheDropLeft,WheDropCaster,BumpFront] =
 % or not triggered.
 
 % By; Joel Esposito, US Naval Academy, 2011
+% Modified by: Chuck Yang, ty244, 2012
 
 %Initialize preliminary return values
 BumpRight = nan;
@@ -25,7 +26,7 @@ end
 warning off
 global td
 
-fwrite(serPort, [142]);  fwrite(serPort,7); 
+fwrite(serPort, [142 7]);
 BmpWheDrps = dec2bin(fread(serPort, 1),8);
 BumpRight = bin2dec(BmpWheDrps(end));
 BumpLeft = bin2dec(BmpWheDrps(end-1));

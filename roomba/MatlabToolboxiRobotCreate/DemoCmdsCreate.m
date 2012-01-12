@@ -22,6 +22,7 @@ function [] = DemoCmdsCreate(serPort, DemoNum);
 
 
 % By; Joel Esposito, US Naval Academy, 2011
+% Modified by: Chuck Yang, ty244, 2012
 try
     
 %Flush Buffer    
@@ -34,7 +35,7 @@ end
 warning off
 global td
 
-fwrite(serPort, [136]);  fwrite(serPort,DemoNum);
+fwrite(serPort, [136 DemoNum]);
 disp('Performing Demo')
 pause(td)
 catch

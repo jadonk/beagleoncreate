@@ -6,6 +6,7 @@ function [Current] = CurrentTesterRoomba(serPort);
 
 
 % By; Joel Esposito, US Naval Academy, 2011
+% Modified by: Chuck Yang, ty244, 2012
 
 %Initialize preliminary return values
 Current = nan;
@@ -21,7 +22,7 @@ end
 
 warning off
 global td
-fwrite(serPort, [142]);  fwrite(serPort,23);
+fwrite(serPort, [142 23]);
 
 Current = fread(serPort, 1, 'int16')/1000;
 

@@ -6,6 +6,7 @@ function [] = SetFwdVelAngVelCreate(serPort, FwdVel, AngVel )
 % specify speeds that cannot be acheived.  Warning is displayed. 
 % Only works with Create I think...not Roomba
 % By; Joel Esposito, US Naval Academy, 2011
+% Modified by: Chuck Yang, ty244, 2012
 try
     
 %Flush Buffer    
@@ -23,7 +24,18 @@ leftWheelVel = min( max(1000* wheelVel(2), -500) , 500);
 if ( abs(rightWheelVel) ==500) |  ( abs(leftWheelVel) ==500)
    disp('Warning: desired velocity combination exceeds limits') 
 end
-fwrite(serPort, [145]);  fwrite(serPort,rightWheelVel, 'int16'); fwrite(serPort,leftWheelVel, 'int16');
+
+[computerType, maxSize, endian] = computer;
+isLittleEndian = (endian == 'L');
+if (isLittleEndian)
+rightWheelVel = typecast(swapbytes(int16(rightWheelVel)),'uint8');
+leftWheelVel = typecast(swapbytes(int16(leftWheelVel)),'uint8');
+else
+rightWheelVel = typecast(int16(rightWheelVel),'uint8');
+leftWheelVel = typecast(int16(leftWheelVel),'uint8');
+end
+
+fwrite(serPort, [145 rightWheelVel leftWheelVel]);
 pause(td)
 catch
     disp('WARNING:  function did not terminate correctly.  Output may be unreliable.')

@@ -8,6 +8,7 @@ ButtonAdv = nan;
 ButtonPlay = nan;
 
 % By; Joel Esposito, US Naval Academy, 2011
+% Modified by: Chuck Yang, ty244, 2012
 try
     
 %Flush Buffer    
@@ -21,7 +22,7 @@ warning off
 global td
 
 
-fwrite(serPort, [142]);  fwrite(serPort,18);
+fwrite(serPort, [142 18]);
 
 Buttons = dec2bin(fread(serPort, 1),8);
 ButtonAdv = bin2dec(Buttons(end-2));

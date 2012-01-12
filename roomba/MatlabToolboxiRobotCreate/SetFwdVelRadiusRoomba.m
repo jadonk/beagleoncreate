@@ -10,6 +10,7 @@ function [] = SetFwdVelRadiusRoomba(serPort, FwdVel, Radius);
 %  Turn in place counter-clockwise = eps
 
 % By; Joel Esposito, US Naval Academy, 2011
+% Modified by: Chuck Yang, ty244, 2012
 try
     
 %Flush Buffer    
@@ -33,9 +34,17 @@ else
     RadiusMM = min( max(Radius*1000,-2000), 2000);
 end
 
-%fwrite(serPort, [137, 255, 56, 1, 244])
+[computerType, maxSize, endian] = computer;
+isLittleEndian = (endian == 'L');
+if (isLittleEndian)
+FwdVelMM = typecast(swapbytes(int16(FwdVelMM)),'uint8');
+RadiusMM = typecast(swapbytes(int16(RadiusMM)),'uint8');
+else
+FwdVelMM = typecast(int16(FwdVelMM),'uint8');
+RadiusMM = typecast(int16(RadiusMM),'uint8');
+end
 
-fwrite(serPort, [137]);  fwrite(serPort,FwdVelMM, 'int16'); fwrite(serPort,RadiusMM, 'int16');
+fwrite(serPort, [137 FwdVelMM RadiusMM]);
 disp('moving!')
 pause(td)
 catch

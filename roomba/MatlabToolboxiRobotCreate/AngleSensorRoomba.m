@@ -5,6 +5,7 @@ function [AngleR] = AngleSensorRoomba(serPort);
 
 
 % By; Joel Esposito, US Naval Academy, 2011
+% Modified by: Chuck Yang, ty244, 2012
 
 %Initialize preliminary return values
 AngleR = nan;
@@ -21,7 +22,7 @@ end
 warning off
 global td
 
-fwrite(serPort, [142]);  fwrite(serPort,20);
+fwrite(serPort, [142 20]);
 
 AngleR = fread(serPort, 1, 'int16')*pi/180;
 pause(td)

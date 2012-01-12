@@ -4,6 +4,7 @@ function [state] = CliffFrontLeftSensorRoomba(serPort);
 % Either triggered or not triggered
 
 % By; Joel Esposito, US Naval Academy, 2011
+% Modified by: Chuck Yang, ty244, 2012
 
 %Initialize preliminary return values
 state = nan;
@@ -19,7 +20,7 @@ end
 warning off
 global td
 
-fwrite(serPort, [142]);  fwrite(serPort,10); 
+fwrite(serPort, [142 10]);
 CliffFrntLft = dec2bin(fread(serPort, 1));
 state = bin2dec(CliffFrntLft(end));
 

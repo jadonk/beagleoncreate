@@ -6,6 +6,7 @@ function [Signal] = CliffFrontLeftSignalStrengthRoomba(serPort);
 
 
 % By; Joel Esposito, US Naval Academy, 2011
+% Modified by: Chuck Yang, ty244, 2012
 
 %Initialize preliminary return values
 Signal = nan;
@@ -21,7 +22,7 @@ end
 
 warning off
 global td
-fwrite(serPort, [142]);  fwrite(serPort,29);
+fwrite(serPort, [142 29]);
 
 Strength =  fread(serPort, 1, 'uint16');
 Signal=(Strength/4095)*100;

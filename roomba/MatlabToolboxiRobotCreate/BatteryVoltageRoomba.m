@@ -3,6 +3,7 @@ function [Voltage] = BatteryVoltageRoomba(serPort);
 
 
 % By; Joel Esposito, US Naval Academy, 2011
+% Modified by: Chuck Yang, ty244, 2012
 
 %Initialize preliminary return values
 Voltage = nan;
@@ -18,7 +19,7 @@ end
 
 warning off
 global td
-fwrite(serPort, [142]);  fwrite(serPort,25);
+fwrite(serPort, [142 25]);
 
 Voltage = fread(serPort, 1, 'uint16')/1000;
 

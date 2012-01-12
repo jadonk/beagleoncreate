@@ -46,6 +46,8 @@ try
             dangle = AngleSensorRoomba(ports.create);
             if ~isempty(dangle)
                 orient = orient + dangle;
+            else
+%                 disp('angle sensor didnt return things');
             end
         end
         
@@ -53,13 +55,13 @@ try
         d = ReadSonar(ports);
 
         % Wait a tic
-        pause(0.5)
+%         pause(0.5)
 
         % Update the plot
         if ROTATE
 %             plot(d.sonar1*cos(orient-pi/4), d.sonar1*sin(orient-pi/4), 'x', 'MarkerSize', 10);
-            dx = d.sonar2*cos(orient)
-            dy = d.sonar2*sin(orient)
+            dx = d.sonar2*cos(orient);
+            dy = d.sonar2*sin(orient);
             plot(d.sonar2*cos(orient), d.sonar2*sin(orient), '*', 'MarkerSize', 10);
             
 %             plot(d.sonar3*cos(orient+pi/4), d.sonar3*sin(orient+pi/4), 'x', 'MarkerSize', 10);

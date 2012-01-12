@@ -7,6 +7,7 @@ function [Distance] = DistanceSensorRoomba(serPort);
 
 
 % By; Joel Esposito, US Naval Academy, 2011
+% Modified by: Chuck Yang, ty244, 2012
 
 %Initialize preliminary return values
 Distance = nan;
@@ -22,7 +23,7 @@ end
 
 warning off
 global td
-fwrite(serPort, [142]);  fwrite(serPort,19);
+fwrite(serPort, [142 19]);
 
 Distance = fread(serPort, 1, 'int16')/1000;
 if (Distance > 32) | (Distance <-32)

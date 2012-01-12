@@ -17,9 +17,6 @@ function ports = CreateBeagleInit(remoteHost)
 
 global td
 td = 0.015;
-% This code puts the robot in CONTROL(132) mode, which means does NOT stop 
-% when cliff sensors or wheel drops are true; can also run while plugged into charger
-Contrl = 132;
 
 createPort = 8888;
 beaglePort = 8866;
@@ -32,6 +29,7 @@ ports.beagle = udp(remoteHost, beaglePort, 'LocalPort', beaglePort);
 ports.beacon = udp(remoteHost, artagPort, 'LocalPort', artagPort);
 ports.sonar = udp(remoteHost, sonarPort, 'LocalPort', sonarPort);
 
+set(ports.create,'Timeout',td)
 set(ports.beacon,'Timeout',0.2)
 set(ports.sonar,'Timeout',0.2)
 
@@ -48,18 +46,23 @@ pause(.5)
 %% Confirm two way connumication
 disp('Setting iRobot Create to Control Mode...');
 % Start! and see if its alive
-Start=[128];
-fwrite(ports.create,Start);
+fwrite(ports.create,128);
 pause(.1)
 
-fwrite(ports.create,Contrl);
+% Set the Create in Full Control mode
+% This code puts the robot in CONTROL(132) mode, which means does NOT stop 
+% when cliff sensors or wheel drops are true; can also run while plugged 
+% into charger
+fwrite(ports.create,132);
 pause(.1)
+
 % light LEDS
 fwrite(ports.create,[139 25 0 128]);
 
 % set song
 fwrite(ports.create, [140 1 1 48 20]);
 pause(0.05)
+
 % sing it
 fwrite(ports.create, [141 1])
 

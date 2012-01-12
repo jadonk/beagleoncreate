@@ -9,6 +9,7 @@ function [] = SetLEDsRoomba(serPort, LED,Color, Intensity)
 
 
 % By; Joel Esposito, US Naval Academy, 2011
+% Modified by: Chuck Yang, ty244, 2012
 warning off
 global td
 %fwrite(serPort, [139, 2,0, 255])
@@ -23,7 +24,7 @@ L= LED;
 aColor= (Color/100)*255;
 aIntensity = (Intensity/100)*255;
 
-fwrite(serPort, [139]);  fwrite(serPort,L); fwrite(serPort,aColor);fwrite(serPort,aIntensity);
+fwrite(serPort, [139 L aColor aIntensity]);
 disp('LEDs Changing')
 pause(td)
 
