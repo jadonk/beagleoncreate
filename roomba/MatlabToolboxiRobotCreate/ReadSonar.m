@@ -21,7 +21,9 @@ function dist = ReadSonar(ports)
 warning off all;
 
 global SONAR_OFFSET;
-SONAR_OFFSET = -0.12;
+if isempty(SONAR_OFFSET)
+SONAR_OFFSET = [-0.12 -0.12 -0.12];
+end
 
 % Initialize preliminary return value
 dist.sonar1 = NaN;
@@ -38,17 +40,17 @@ try
 		dist.sonar2 = typecast(uint8(packet(17:20)),'single');
 		dist.sonar3 = typecast(uint8(packet(21:24)),'single');
         if dist.sonar1 > 0
-            dist.sonar1 = dist.sonar1 + SONAR_OFFSET;
+            dist.sonar1 = dist.sonar1 + SONAR_OFFSET(1);
         else
             dist.sonar1 = NaN;
         end
         if dist.sonar2 > 0
-            dist.sonar2 = dist.sonar2 + SONAR_OFFSET;
+            dist.sonar2 = dist.sonar2 + SONAR_OFFSET(2);
         else
             dist.sonar2 = NaN;
         end
         if dist.sonar3 > 0
-            dist.sonar3 = dist.sonar3 + SONAR_OFFSET;
+            dist.sonar3 = dist.sonar3 + SONAR_OFFSET(3);
         else
             dist.sonar3 = NaN;
         end

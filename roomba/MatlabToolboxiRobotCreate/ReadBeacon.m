@@ -17,6 +17,12 @@ function out = ReadBeacon(ports)
 % By: Chuck Yang, ty244, 2012
 
 warning off all;
+
+global BEACON_OFFSET;
+if isempty(BEACON_OFFSET)
+BEACON_OFFSET = -0.12;
+end
+
 MAXARTAGSEEN = 10;
 HEADER = 12;
 % Initialize preliminary return value
@@ -45,7 +51,7 @@ try
             yIndex = xIndex+4*MAXARTAGSEEN;
             out.y(i) = typecast(uint8(packet(yIndex:yIndex+3)),'single');
             zIndex = yIndex+4*MAXARTAGSEEN;
-            out.z(i) = typecast(uint8(packet(zIndex:zIndex+3)),'single');
+            out.z(i) = typecast(uint8(packet(zIndex:zIndex+3)),'single') + BEACON_OFFSET;
             yawIndex = zIndex+4*MAXARTAGSEEN;
             out.yaw(i) = typecast(uint8(packet(yawIndex:yawIndex+3)),'single');
         end
