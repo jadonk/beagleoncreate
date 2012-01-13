@@ -28,12 +28,12 @@ disp('(NOTE: For calibration, make sure you have good lighting');
 % Take a series of measurements
 d_measured = zeros(size(TEST_DISTANCES));
 for j = 1:length(TEST_DISTANCES)
-    fprintf(2, '\n(Step %d/%d) Please place the ARtag %gcm away and then press ENTER...', j, length(TEST_DISTANCES), TEST_DISTANCES(j)*100);
+    fprintf(2, '\n(Step %d/%d) Please place the ARtag %gcm away and then press ENTER...\n', j, length(TEST_DISTANCES), TEST_DISTANCES(j)*100);
     pause
     dist = ReadBeacon(ports);
-    d_measured(j) = dist.z;
+    d_measured(j) = dist.z(1);
 
-    fprintf(2, ' measured a sonar 1 distance of %2.2gm', d_measured(j));
+    fprintf(2, ' measured a sonar 1 distance of %2.2gm\n', d_measured(j));
 end
 
 % Calculate offset
