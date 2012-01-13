@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include "pthread.h"
 
 #define CREATE_PORT 8888
 
@@ -25,6 +26,8 @@ private:
 	int _sock;
 	struct sockaddr_in _createPort;
 	unsigned long _connectedHost;
+
+	pthread_mutex_t _serialMutex;
 	
 	int InitUDPListener();
 };

@@ -14,6 +14,7 @@
 #define BEAGLE_PORT 8866
 
 Create* create;
+int createUDPsock = -1;
 
 void* CreateSerialListener(void* arg)
 {
@@ -22,7 +23,7 @@ void* CreateSerialListener(void* arg)
 
 void* CreateUDPListener(void* arg)
 {
-	return (void*) create->RunUDPListener();
+	return (void*) create->RunUDPListener(createUDPsock);
 }
 
 void StartListening(Packet & packet)

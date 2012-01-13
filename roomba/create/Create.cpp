@@ -21,11 +21,13 @@ Create::Create(int sock, struct sockaddr_in & createPort, unsigned long connecte
 	_createPort = createPort;
 	_connectedHost = connectedHost;
 	isEnding = false;
+	pthread_mutex_init(&_serialMutex, NULL);
 	InitSerial();
 }
 
 Create::~Create()
 {
+	pthread_mutex_destroy(&_serialMutex);
 	CloseSerial();
 }
 
@@ -79,7 +81,10 @@ void Create::SendSerial(char* buf, int bufLength)
 	if (bufLength == 0)
 		return;
 
-	if (write(_fd, buf, bufLength) == -1)
+	pthread_mutex_lock(&_serialMutex);
+	int ret = write(_fd, buf, bufLength);
+	pthread_mutex_unlock(&_serialMutex);
+	if (ret == -1)
 	{
 		printf("ERROR: write error occured.\n");
 		return;
@@ -133,7 +138,10 @@ int Create::RunSerialListener()
 			/* We have input */
 			if (FD_ISSET(_fd, &input))
 			{
+				pthread_mutex_lock(&_serialMutex);
 				bufLength = read(_fd, buf, MAXPACKETSIZE);
+				pthread_mutex_unlock(&_serialMutex);
+
 				if (sendto(_sock, buf, bufLength, 0, (const struct sockaddr *) &_createPort, sizeof(struct sockaddr_in)) < 0) printf("ERROR: sendto\n");
 				printf("Received from Create: \n");
 				for (int i = 0; i < bufLength; i++)
