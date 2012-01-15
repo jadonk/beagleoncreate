@@ -9,24 +9,24 @@ CFLAGS 	= -O2 -Wall $(OPENCV_CFLAGS) $(ARTKP_CFLAGS) $(GSTREAMER_CFLAGS)
 LDFLAGS = -L. -lpthread $(OPENCV_LFLAGS) $(ARTKP_LFLAGS) $(GSTREAMER_LFLAGS)
 CPP	= g++
 
-SRCS 	= main.cpp \
+SRCS 	= example_main.cpp \
 	  Camera.cpp \
 	  ARtag.cpp \
 	  ARtagLocalizer.cpp 
 
-OBJS 	= main.o \
+OBJS 	= example_main.o \
 	  Camera.o \
 	  ARtag.o \
 	  ARtagLocalizer.o 
 
-EXECUTABLE = main
+EXECUTABLE = example_main
 
 all	: $(EXECUTABLE)
 
 $(EXECUTABLE) : $(OBJS)
 	$(CPP) $(OBJS) $(LDFLAGS) -o $@ $*
 
-main.o	: main.cpp
+example_main.o	: example_main.cpp
 	$(CPP) $(CFLAGS) -c $^
 
 ARtag.o	: ARtag.h ARtag.cpp
@@ -35,12 +35,12 @@ ARtag.o	: ARtag.h ARtag.cpp
 ARtagLocalizer.o : ARtagLocalizer.h ARtag.h ARtagLocalizer.cpp
 	$(CPP) $(CFLAGS) -c $^
 	
-Camera.o : ARtagLocalizer.h Packet.h Camera.h Camera.cpp
+Camera.o : ARtagLocalizer.h ../Packet.h Camera.h Camera.cpp
 	$(CPP) $(CFLAGS) -c $^
 
-$(OBJS)	: Packet.h ARtag.h ARtagLocalizer.h Camera.h
+$(OBJS)	: ../Packet.h ARtag.h ARtagLocalizer.h Camera.h
 
 clean	:
-	rm -rf main *.o
+	rm -rf example_main *.o
 	rm -rf *.*~
 	rm -rf *.h.gch

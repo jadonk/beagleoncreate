@@ -9,12 +9,26 @@
 #include "../Packet.h"
 #include "Camera.h"
 
+/*!
+  Set the image channel used for gstreamer.
+*/
 #define NCHANNELS 3
 
 using namespace cv;
 
 extern Camera * camera;
 
+/**
+ * 	\class Camera Camera.h "Camera.h"
+ *	\brief The class that does everything related to the vision sensor. Using gstreamer in this class.
+ */
+
+/*! \fn Camera::Camera(int remoteSock, struct sockaddr_in & videoPort, struct sockaddr_in & artagPort)
+ * 	\brief A constructor for Camera class. Init _sock, _videoPort, and _artagPort. Also call the constructor of ARtagLocalizer.
+ *  \param remoteSock the socket that was initalized and ready to send to remote.
+ * 	\param videoPort the udp port for sending over image stream.
+ *  \param artagPort the udp port for sending detected ARtag id and pose information.
+ */
 Camera::Camera(int remoteSock, struct sockaddr_in & videoPort, struct sockaddr_in & artagPort)
 {
 	_sock = remoteSock;
@@ -23,11 +37,18 @@ Camera::Camera(int remoteSock, struct sockaddr_in & videoPort, struct sockaddr_i
 	ar = new ARtagLocalizer();
 }
 
+/*! \fn Camera::~Camera()
+ *  \brief A destructor for Camera class. It calls the destructor of ARtagLocalizer and deletes it.
+ */
 Camera::~Camera()
 {
 	delete ar;
 }
 
+/*! \fn void Camera::SendImage(IplImage * image)
+ *  \brief Send the image object over through udp.
+ *  \param image the image to be sent over.
+ */
 void Camera::SendImage(IplImage * image)
 {
 	Packet packet;
@@ -39,6 +60,10 @@ void Camera::SendImage(IplImage * image)
 	if (sendto(_sock, (unsigned char*)&packet, sizeof(packet), 0, (const struct sockaddr *)&_videoPort, sizeof(struct sockaddr_in)) < 0) printf("sendto\n");
 }
 
+/*! \fn void Camera::SendARtag()
+ * 	\brief Send the ARtag id and pose info over to remote through udp.
+ * 	\see ARtag
+ */
 void Camera::SendARtag()
 {
 	Packet packet;
@@ -63,6 +88,12 @@ void Camera::SendARtag()
 	if (sendto(_sock, (unsigned char*)&packet, sizeof(packet), 0, (const struct sockaddr *)&_artagPort, sizeof(struct sockaddr_in)) < 0) printf("sendto\n");
 }
 
+/*! \fn GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data)
+ * 	\brief The callback function when a new image is ready in the buffer.
+ *  \param app_sink the appsink object used for gstreamer.
+ *  \param user_data data that gets passed along the callback.
+ *  \return the status of executing this function. GST_FLOW_OK if okay.
+ */
 GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data)
 {
 	GstBuffer *buffer = gst_app_sink_pull_buffer( (GstAppSink*) gst_bin_get_by_name( GST_BIN(camera->pipeline1), APPSINKNAME));
@@ -92,6 +123,10 @@ GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data)
 	return GST_FLOW_OK;
 }
 
+/*! \fn int Camera::Setup()
+ *  \brief Setup function to get ready for the gstreamer.
+ *  \return 0 on success, -1 on fail.
+ */
 int Camera::Setup()
 {
 	// GStreamer stuff...
@@ -157,6 +192,9 @@ int Camera::Setup()
 	return 0;
 }
 
+/*! \fn void Camera::CleanUp()
+ *  \brief Clean up function to clean up gstreamer related stuff.
+ */
 void Camera::CleanUp()
 {
 	//g_print("Stopping playback - pipeline1\n");
@@ -173,6 +211,10 @@ void Camera::CleanUp()
 	g_main_loop_unref(loop);
 }
 
+/*! \fn int Camera::StreamARtagVideo()
+ * 	\brief The main loop for Camera class. Also calls CleanUp when out of the loop.
+ * 	\return 0 on success, -1 on fail.
+ */
 int Camera::StreamARtagVideo()
 {
 	if (Setup() != 0)
@@ -184,7 +226,7 @@ int Camera::StreamARtagVideo()
 
 	// Iterate
 	printf("Running ARtag detection.\n");
-	g_main_loop_run(loop);
+	QuitMainLoop();
 
 	// Out of the main loop, clean up nicely
 	CleanUp();
@@ -192,6 +234,9 @@ int Camera::StreamARtagVideo()
 	return 0;
 }
 
+/*! \fn void Camera::QuitMainLoop()
+ * 	\brief A public function to quit the Camera class main loop.
+ */
 void Camera::QuitMainLoop()
 {
 	g_main_loop_quit(loop);

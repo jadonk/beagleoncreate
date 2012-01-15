@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include "ARtagLocalizer.h"
+/*!
+  Set the fudge factor for multiplying the ARtag pose.
+*/
 #define FUDGE_FACTOR 0.97
 
 using namespace std;
@@ -10,6 +13,15 @@ const float THICK_PATTERN_BORDER = 0.25;
 bool ARtagLocalizer::allStop = false;
 char calibFilename[] = "MS_LifeCam_VX700.cal";
 
+/*!
+ * 	\class ARtagLocalizer ARtagLocalizer.h "ARtagLocalizer.h"
+ *	\brief This class is the core class that localize the ARtag using ARToolKitPlus.
+ */
+
+/*!	\fn ARtagLocalizer::ARtagLocalizer()
+ * 	\brief A constructor for ARtagLocalizer.
+ * 	Initalize image width and height, the flag to use BCH, patter center, pattern width, and fudge factor.
+ */
 ARtagLocalizer::ARtagLocalizer()
 {
 	imgwidth = 640;
@@ -20,18 +32,32 @@ ARtagLocalizer::ARtagLocalizer()
 	patternWidth_ = 80.0;
 	xoffset = 0;
 	yoffset = 0;
-	fudge = 0.97;
+	fudge = FUDGE_FACTOR;
 }
 
+/*!	\fn ARtagLocalizer::~ARtagLocalizer()
+ * 	\brief A destructor for ARtagLocalizer.
+ * 	There is nothing done in the destructor.
+ */
 ARtagLocalizer::~ARtagLocalizer()
 {
 }
 
+/*!	\fn int ARtagLocalizer::initARtagPose(int width, int height, float markerWidth, float x_offset, float y_offset, float yaw_offset, float ffactor)
+ * 	\brief Initalize The localizer with all these parameters.
+ * 	\param width the width of the image input.
+ * 	\param height the height of the image input.
+ * 	\param markerWidth the width of the ARtag in CM which determines the size of the ARtag used.
+ * 	\param x_offset the offset of x in meter.
+ * 	\param y_offset the offset of y in meter.
+ *  \param ffactor the fudge factor to be multiplied on x and y estimation.
+ * 	\return 0 on success -1 if failed.
+ */
 int ARtagLocalizer::initARtagPose(int width, int height, float markerWidth, float x_offset, float y_offset, float yaw_offset, float ffactor)
 {
 	// create a tracker that does:
-    	//  - 6x6 sized marker images
-    	//  - samples at a maximum of 6x6
+	//  - 6x6 sized marker images
+	//  - samples at a maximum of 6x6
 	//  - works with luminance (gray) images
 	//  - can load a maximum of 1 pattern
 	//  - can detect a maximum of 8 patterns in one image
@@ -39,9 +65,7 @@ int ARtagLocalizer::initARtagPose(int width, int height, float markerWidth, floa
 	imgwidth = width;
 	imgheight = height;
 	patternCenter_[0] = patternCenter_[1] = 0.0;
-	xoffset = x_offset;
-	yoffset = y_offset;
-	yawoffset = yaw_offset;
+	setARtagOffset(x_offset, y_offset, yaw_offset);
 	fudge = ffactor;
 
 	tracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_LUM);
@@ -60,26 +84,33 @@ int ARtagLocalizer::initARtagPose(int width, int height, float markerWidth, floa
 	// the marker in the BCH test image has a thin border...
 	tracker->setBorderWidth(THIN_PATTERN_BORDER);
 
-    	// set a threshold. alternatively we could also activate automatic thresholding
-    	tracker->setThreshold(100);
+	// set a threshold. alternatively we could also activate automatic thresholding
+	tracker->setThreshold(100);
 
-    	// let's use lookup-table undistortion for high-speed
-    	// note: LUT only works with images up to 1024x1024
-    	tracker->setUndistortionMode(ARToolKitPlus::UNDIST_LUT);
+	// let's use lookup-table undistortion for high-speed
+	// note: LUT only works with images up to 1024x1024
+	tracker->setUndistortionMode(ARToolKitPlus::UNDIST_LUT);
 
-    	// RPP is more robust than ARToolKit's standard pose estimator but uses more CPU resource
+	// RPP is more robust than ARToolKit's standard pose estimator but uses more CPU resource
 	// so using standard pose estimator instead
-    	tracker->setPoseEstimator(ARToolKitPlus::POSE_ESTIMATOR_ORIGINAL);
+	tracker->setPoseEstimator(ARToolKitPlus::POSE_ESTIMATOR_ORIGINAL);
 	//tracker->setPoseEstimator(ARToolKitPlus::POSE_ESTIMATOR_RPP);
 
-    	// switch to simple ID based markers
-    	// use the tool in tools/IdPatGen to generate markers
-    	tracker->setMarkerMode(useBCH ? ARToolKitPlus::MARKER_ID_BCH : ARToolKitPlus::MARKER_ID_SIMPLE);
+	// switch to simple ID based markers
+	// use the tool in tools/IdPatGen to generate markers
+	tracker->setMarkerMode(useBCH ? ARToolKitPlus::MARKER_ID_BCH : ARToolKitPlus::MARKER_ID_SIMPLE);
 	//printf("finished init\n");
 	init = true;
 	return 0;
 }
 
+/*! \fn bool ARtagLocalizer::getARtagPose(IplImage* src, IplImage* dst, int camID)
+ * 	\brief The function to check if there is any ARtag in the view. Also put in the tag id and pose on the image if found.
+ * 	\param src the src image object.
+ * 	\param dst the dst image object.
+ * 	\param camID the camera to check.
+ * 	\return true if found any, false otherwise.
+ */
 bool ARtagLocalizer::getARtagPose(IplImage* src, IplImage* dst, int camID)
 {
 	if (!init)
@@ -133,6 +164,9 @@ bool ARtagLocalizer::getARtagPose(IplImage* src, IplImage* dst, int camID)
 			printf("\n");
 			
 			foundAny = true;
+			
+			#if 0
+			// no longer putting tag info on image.
 			char str[30];
 			sprintf(str,"%d",markers[m].id);
 			CvFont font1 = cvFont(3,3);
@@ -140,6 +174,7 @@ bool ARtagLocalizer::getARtagPose(IplImage* src, IplImage* dst, int camID)
 			cvPutText (dst,str,cvPoint( markers[m].pos[0]+25,markers[m].pos[1]+10),&font1,cvScalar(0,0,255));
 			sprintf(str,"(%.2f,%.2f,%.2f)", x*fudge + xoffset, -(y*fudge + yoffset), yaw + yawoffset);
 			cvPutText (dst,str,cvPoint( markers[m].pos[0]+25,markers[m].pos[1]+25),&font2,cvScalar(0,0,255));
+			#endif
 
 			cv::Mat PoseM(4, 4, CV_32F, modelViewMatrix_);
 			cv::transpose(PoseM,PoseM);
@@ -160,17 +195,34 @@ bool ARtagLocalizer::getARtagPose(IplImage* src, IplImage* dst, int camID)
 
 	return foundAny;
 }
-
+/*! \fn ARtag * ARtagLocalizer::getARtag(int index)
+ * 	\brief Get the ARtag detected. Need to know the total number of ARtags in view first.
+ * 	\param index the index in the vector of ARtag.
+ * 	\return ARtag object that stores information of the id and pose.
+ * 	\see ARtag
+ * 	\see getARtagSize
+ */
 ARtag * ARtagLocalizer::getARtag(int index)
 {
 	return &mytag[index];
 }
 
+/*! \fn int ARtagLocalizer::getARtagSize()
+ * 	\brief Get te size of the ARtag seen in the view the last time the getARtagPose was called.
+ * 	\return the total number of the ARtag that was seen in the view.
+ * 	\see getARtagPose
+ */
 int ARtagLocalizer::getARtagSize()
 {
 	return mytag.size();
 }
 
+/*! \fn void ARtagLocalizer::setARtagOffset(float x_offset, float y_offset, float yaw_offset)
+ * 	\brief Set the ARtag pose offset.
+ * 	\param x_offset the ARtag pose offset in x 
+ * 	\param y_offset the ARtag pose offset in y 
+ * 	\param yaw_offset the ARtag pose offset in yaw 
+ */
 void ARtagLocalizer::setARtagOffset(float x_offset, float y_offset, float yaw_offset)
 {
 	xoffset = x_offset;
@@ -178,6 +230,10 @@ void ARtagLocalizer::setARtagOffset(float x_offset, float y_offset, float yaw_of
 	yawoffset = yaw_offset;
 }
 
+/*! \fn int ARtagLocalizer::cleanupARtagPose(void)
+ * 	\brief Clean up the stuff for ARtag localizer, should have called in destructor?
+ * 	\return 0 on success
+ */
 int ARtagLocalizer::cleanupARtagPose(void)
 {
 	delete tracker;

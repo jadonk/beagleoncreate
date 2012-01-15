@@ -1,6 +1,9 @@
 #include "ARtag.h"
 #include <ARToolKitPlus/TrackerSingleMarker.h>
 
+/*! 
+   Set the max ARtag ID that is detectable.
+*/
 #define ARTAG_MAX_ID 99
 
 using ARToolKitPlus::TrackerSingleMarker;

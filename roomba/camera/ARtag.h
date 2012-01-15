@@ -6,12 +6,13 @@
 class ARtag
 {
 	public:
+        
 		ARtag();
 		virtual ~ARtag();
 
 		void setId(int id);
 		unsigned int getId() const;
-
+   
 		void setPose(CvMat * pose);
 		CvMat * getPose() const;
 

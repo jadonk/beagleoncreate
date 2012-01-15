@@ -12,9 +12,24 @@
 
 #include "ARtagLocalizer.h"
 
+/*!
+  Set the app source name for gstreamer.
+*/
 #define APPSRCNAME "app-src_01"
+
+/*!
+  Set the app sink name for gstreamer.
+*/
 #define APPSINKNAME "app-sink_01"
+
+/*!
+  Set the image width used for gstreamer.
+*/
 #define IMG_WIDTH 320
+
+/*!
+  Set the image height used for gstreamer.
+*/
 #define IMG_HEIGHT 240
 
 class Camera
