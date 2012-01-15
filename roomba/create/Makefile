@@ -9,28 +9,28 @@ CFLAGS 	= -O2 -Wall $(OPENCV_CFLAGS) $(ARTKP_CFLAGS) $(GSTREAMER_CFLAGS)
 LDFLAGS = -L. -lrt -lpthread $(OPENCV_LFLAGS) $(ARTKP_LFLAGS) $(GSTREAMER_LFLAGS)
 CPP	= g++
 
-SRCS 	= main.cpp \
+SRCS 	= example_main.cpp \
 	  Create.cpp 
 
-OBJS 	= main.o \
+OBJS 	= example_main.o \
 	  Create.o 
 
-EXECUTABLE = main
+EXECUTABLE = example_main
 
 all	: $(EXECUTABLE)
 
 $(EXECUTABLE) : $(OBJS)
 	$(CPP) $(OBJS) $(LDFLAGS) -o $@ $*
 
-main.o	: Packet.h Create.h main.cpp
+example_main.o	: ../Packet.h Create.h example_main.cpp
 	$(CPP) $(CFLAGS) -c $^
 
-Create.o : Packet.h Create.h Create.cpp
+Create.o : ../Packet.h Create.h Create.cpp
 	$(CPP) $(CFLAGS) -c $^
 
-$(OBJS)	: Packet.h Create.h
+$(OBJS)	: ../Packet.h Create.h
 
 clean	:
-	rm -rf main *.o
+	rm -rf example_main *.o
 	rm -rf *.*~
 	rm -rf *.h.gch
