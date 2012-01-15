@@ -9,22 +9,22 @@ CFLAGS 	= -O2 -Wall $(OPENCV_CFLAGS) $(ARTKP_CFLAGS) $(GSTREAMER_CFLAGS)
 LDFLAGS = -L. -lrt -lpthread $(OPENCV_LFLAGS) $(ARTKP_LFLAGS) $(GSTREAMER_LFLAGS)
 CPP	= g++
 
-SRCS 	= main.cpp \
+SRCS 	= example_main.cpp \
 	  Sonar.cpp \
 	  Gpio.cpp 
 
-OBJS 	= main.o \
+OBJS 	= example_main.o \
 	  Sonar.o \
 	  Gpio.o 
 
-EXECUTABLE = main
+EXECUTABLE = example_main
 
 all	: $(EXECUTABLE)
 
 $(EXECUTABLE) : $(OBJS)
 	$(CPP) $(OBJS) $(LDFLAGS) -o $@ $*
 
-main.o	: Sonar.h main.cpp
+example_main.o	: Sonar.h example_main.cpp
 	$(CPP) $(CFLAGS) -c $^
 
 Sonar.o	: Gpio.h Sonar.h Sonar.cpp
@@ -36,6 +36,6 @@ Gpio.o : Gpio.h Gpio.cpp
 $(OBJS)	: Gpio.h Sonar.h 
 
 clean	:
-	rm -rf main *.o
+	rm -rf example_main *.o
 	rm -rf *.*~
 	rm -rf *.h.gch
