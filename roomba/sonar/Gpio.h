@@ -8,17 +8,23 @@
 /*! GpioVal enum for gpio value. */
 enum GpioVal
 { 
-	HIGH, 		/*! gpio value is high. */
-	LOW,		/*! gpio value is low. */
-	UNKNOWNVAL	/*! gpio value is in unknown state?! */
+	/*! gpio value is high. */
+	HIGH, 
+	/*! gpio value is low. */
+	LOW,	
+	/*! gpio value is in unknown state?! */
+	UNKNOWNVAL	
 };
 
 /*! GpioEdge enum for gpio input trigger edge. */
 enum GpioEdge
 {
-	RISING,		/*! gpio input trigger on rising edge. */
-	FALLING,	/*! gpio input trigger on falling edge. */
-	BOTH		/*! gpio input trigger on both edge. */
+	/*! gpio input trigger on rising edge. */
+	RISING,	
+	/*! gpio input trigger on falling edge. */
+	FALLING,
+	/*! gpio input trigger on both edge. */
+	BOTH		
 };
 
 class Gpio
