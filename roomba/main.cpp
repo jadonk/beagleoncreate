@@ -29,16 +29,9 @@ This is a test application.
 #include "create/Create.h"
 #include "sonar/Sonar.h"
 
-/*! The udp port number for iRobot Create related control stuff. */
-#define CREATE_PORT 8888
 /*! The udp port number for talking with this program. */
 #define BEAGLE_PORT 8866
-/*! The udp port number for sending the video stream to remote host. */
-#define VIDEO_PORT 8855
-/*! The udp port number for sending ARtag id and pose info. */
-#define ARTAG_PORT 8844
-/*! The udp port number for sending sonar measurement. */
-#define SONAR_PORT 8833
+
 /*! The gpio pin number that sonar 1 is connected to. */
 #define SONAR_GPIO1 137
 /*! The gpio pin number that sonar 2 is connected to. */

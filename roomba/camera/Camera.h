@@ -15,24 +15,18 @@
 /*! \file Camera.h
  */
 
-/*!
-  Set the app source name for gstreamer.
-*/
+/*! The udp port number for sending the video stream to remote host. */
+#define VIDEO_PORT 8855
+/*! The udp port number for sending ARtag id and pose info. */
+#define ARTAG_PORT 8844
+
+/*! Set the app source name for gstreamer. */
 #define APPSRCNAME "app-src_01"
-
-/*!
-  Set the app sink name for gstreamer.
-*/
+/*! Set the app sink name for gstreamer. */
 #define APPSINKNAME "app-sink_01"
-
-/*!
-  Set the image width used for gstreamer.
-*/
+/*! Set the image width used for gstreamer. */
 #define IMG_WIDTH 320
-
-/*!
-  Set the image height used for gstreamer.
-*/
+/*! Set the image height used for gstreamer. */
 #define IMG_HEIGHT 240
 
 class Camera
