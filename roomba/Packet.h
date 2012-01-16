@@ -5,26 +5,52 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
+/*! \file Packet.h */
+
+/*! The maximum packet size, used for buffer init. */
 #define MAXPACKETSIZE 5000 
+/*! The maximum number of ARtags that can be sent over at once. */
 #define MAXARTAGSEEN 10
+
+/*!
+ * 	\struct Packet Packet.h "Packet.h"
+ *	\brief This struct defines the packet structure.
+ */
+
+
+/*! enum for the expected packet type */
 enum PacketType
 {
+	/*! init packet should always be received first before any operation. */
 	INIT = 1,
+	/*! \deprecated end packet to end operation and allow other remote client to connect. */
 	END,
+	/*! ctrl packet to contrl any thing in this program (not implemented). */
 	CTRL,
+	/*! data packet contains the artag id and pose info. */
 	DATA,
+	/*! image packet that has 160x120 image sent over. */
 	IMAGE,
+	/*! sonar packet contains the three sonar distance measurements. */
 	SONAR,
+	/*! error packet to report of any error (not implemented). */
 	ERROR,
+	/*! shutdown packet to quit this program entirely. */
 	SHUTDOWN,
+	/*! unknown?!. */
 	UNKNOWN
 };
 
 struct Packet
 {
+	/*! The type of the packet \see PacketType */
 	PacketType type;
+	/*! The port number of remote client. */
 	unsigned short port;
+	/*! The address of the remote client. */
 	struct in_addr addr;
+	
+	/*! This union contains different stuff depends on the PacketType. */
 	union
 	{
 		struct
