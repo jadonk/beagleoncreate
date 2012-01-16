@@ -22,7 +22,7 @@ warning off all;
 
 global SONAR_OFFSET;
 if isempty(SONAR_OFFSET)
-SONAR_OFFSET = [-0.12 -0.12 -0.12];
+SONAR_OFFSET = [0 0 0];
 end
 
 % Initialize preliminary return value

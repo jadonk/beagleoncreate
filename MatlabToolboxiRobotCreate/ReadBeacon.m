@@ -20,7 +20,7 @@ warning off all;
 
 global BEACON_OFFSET;
 if isempty(BEACON_OFFSET)
-BEACON_OFFSET = -0.12;
+BEACON_OFFSET = 0;
 end
 
 MAXARTAGSEEN = 10;
