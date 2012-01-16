@@ -46,12 +46,19 @@ public:
 	void SendImage(IplImage * image);
 	void SendARtag();
 
+	/*! The main loop of gstreamer. */
 	GMainLoop *loop;	
+	/*! Pipeline 1 for gstreamer. */
 	GstElement *pipeline1;
+	/*! Pipeline 2 for gstreamer. */
 	GstElement *pipeline2;
+	/*! The image variable to be used for the buffer. */
 	IplImage * img;
+	/*! The gray image variable to be used for the buffer. */
 	IplImage * gray;
+	/*! The raw data from the image buffer. */
 	uchar * IMG_data;
+	/*! The artag localizer object. */
 	ARtagLocalizer * ar;
 	
 private:

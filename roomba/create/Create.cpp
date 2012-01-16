@@ -11,9 +11,24 @@
 #include "Packet.h"
 #include "Create.h"
 
+/*! \file Create.cpp */
+
+/*! The serial port path in the sys_fs. */
 #define CREATE_SERIAL_PORT "/dev/ttyUSB0"
+/*! The serial port baudrate for serial communication with iRobot Create. */
 #define CREATE_SERIAL_BRATE B57600
 
+/*!
+ * 	\class Create Create.h "Create.h"
+ *	\brief This class handles all serial communication with iRobot Create.
+ */
+
+/*! \fn Create::Create(int sock, struct sockaddr_in & createPort, unsigned long connectedHost)
+ *  \brief A constructor for Create class. The serial communication is initialized here.
+ *  \param sock The remote socket that was initialized and ready to be used.
+ * 	\param createPort The port for sending and receiving stuff for Create.
+ * 	\param connectedHost The connected host's ip address to avoid muliple connection.
+ */
 Create::Create(int sock, struct sockaddr_in & createPort, unsigned long connectedHost)
 {
 	_fd = -1;
@@ -25,12 +40,19 @@ Create::Create(int sock, struct sockaddr_in & createPort, unsigned long connecte
 	InitSerial();
 }
 
+/*! \fn Create::~Create()
+ * 	\brief A destructor for Create class. The serial communication is cleaned up here.
+ */
 Create::~Create()
 {
 	pthread_mutex_destroy(&_serialMutex);
 	CloseSerial();
 }
 
+/*! \fn int Create::InitSerial()
+ * 	\brief To initialize the serial communication.
+ * 	\return fd, the file descriptor on success, -1 on fail.
+ */
 int Create::InitSerial()
 {
 	_fd = open(CREATE_SERIAL_PORT, O_RDWR | O_NOCTTY | O_NDELAY);
@@ -65,11 +87,19 @@ int Create::InitSerial()
 	return _fd;
 }
 
+/*! \fn void Create::CloseSerial()
+ * 	\brief Close the serial communication.
+ */
 void Create::CloseSerial()
 {
 	close(_fd);
 }
 
+/*! \fn void Create::SendSerial(char* buf, int bufLength)
+ * 	\brief Send the stuff over to serial interface to iRobot Create
+ * 	\param buf The "stuff" to be sent over.
+ * 	\param bufLength The size of the stuff.
+ */
 void Create::SendSerial(char* buf, int bufLength)
 {
 	if (_fd == -1)
@@ -97,6 +127,10 @@ void Create::SendSerial(char* buf, int bufLength)
 	printf("\n");
 }
 
+/*! \fn int Create::RunSerialListener()
+ *  \brief The serial listener to listen anything coming from the iRobot Create.
+ * 	\return 0 on success, -1 on fail.
+ */
 int Create::RunSerialListener()
 {
 	char buf[MAXPACKETSIZE];
@@ -156,6 +190,16 @@ int Create::RunSerialListener()
 	return 0;
 }
 
+/*! \fn int timeout_recvfrom(int sock, void *data, int len, struct sockaddr * sockfrom, socklen_t *fromlen, int timeoutInSec)
+ * 	\brief A recvfrom helper function with timeout.
+ *  \param sock The sock to receive from.
+ * 	\param data The data buffer to copy the received data.
+ * 	\param len The size of the data received.
+ * 	\param sockfrom The remote socket info.
+ * 	\param fromlen The size of that socket info.
+ * 	\param timeoutInSec The desired time out in second.
+ *	\return The length of the received data if there is something, 0 if timed out.
+ */
 int timeout_recvfrom(int sock, void *data, int len, struct sockaddr * sockfrom, socklen_t *fromlen, int timeoutInSec)
 {
 	fd_set socks;
@@ -169,6 +213,10 @@ int timeout_recvfrom(int sock, void *data, int len, struct sockaddr * sockfrom, 
 		return 0;
 }
 
+/*! \fn int Create::InitUDPListener()
+ *  \brief Initialize the UDP listener to listen to udp packet for talking to iRobot Create.
+ * 	\return The socket file descriptor.
+ */
 int Create::InitUDPListener()
 {
 	int sock;
@@ -187,6 +235,11 @@ int Create::InitUDPListener()
 	return sock;
 }
 
+/*! \fn int Create::RunUDPListener(int & sock)
+ * 	\brief The main loop of the UDP listener.
+ * 	\param sock The socket to listen to. If didn't call InitUDPListener, I will do that for you.
+ * 	\return 0 on success, -1 on fail.
+ */
 int Create::RunUDPListener(int & sock)
 {
 	int bufLength;
@@ -209,8 +262,11 @@ int Create::RunUDPListener(int & sock)
 		bzero(&buf, sizeof(buf));
 		bufLength = timeout_recvfrom(sock, buf, MAXPACKETSIZE, 
 				(struct sockaddr *) &from, &fromlen, 1);
-		//bufLength = recvfrom(sock, buf, MAXPACKETSIZE, 
-		//		0, (struct sockaddr *)&from, &fromlen);
+		#if 0
+		// using the timed out version of recvfrom now
+		bufLength = recvfrom(sock, buf, MAXPACKETSIZE, 
+				0, (struct sockaddr *)&from, &fromlen);
+		#endif
 
 		if (bufLength == 0) continue;
 		if (bufLength < 0) printf("ERROR: recvfrom\n");

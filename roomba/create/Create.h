@@ -5,6 +5,9 @@
 #include <netdb.h>
 #include "pthread.h"
 
+/*! \file Create.h */
+
+/*! The udp port number for direct control of the iRobot Create. */
 #define CREATE_PORT 8888
 
 class Create
@@ -19,6 +22,7 @@ public:
 	int RunSerialListener();
 	int RunUDPListener(int & sock);
 	
+	/*! Flag to get the Create class ready to quit. */
 	bool isEnding;
 
 private:

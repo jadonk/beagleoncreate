@@ -26,9 +26,13 @@ class ARtag
 		unsigned int getCamId() const;
 
 	protected:
+		/*! ID of the ARtag. */
 		unsigned int id_;
+		/*! pose matrix of the ARtag. */
 		CvMat * pose_;
+		/*! The timestamp of the pose. */
 		unsigned int pose_age_;
+		/*! Camera ID where this ARtag is detected. */
 		unsigned int cam_id_;
 };
 
