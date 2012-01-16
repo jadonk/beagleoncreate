@@ -1,3 +1,16 @@
+/**
+@mainpage
+
+This is a test application.
+
+@author Chuck Yang ty244
+@date 1/15/2012
+@version 1.0
+*/
+
+/*! \file main.cpp
+ */
+
 #include <sys/types.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -16,50 +29,85 @@
 #include "create/Create.h"
 #include "sonar/Sonar.h"
 
+/*! The udp port number for iRobot Create related control stuff. */
 #define CREATE_PORT 8888
+/*! The udp port number for talking with this program. */
 #define BEAGLE_PORT 8866
+/*! The udp port number for sending the video stream to remote host. */
 #define VIDEO_PORT 8855
+/*! The udp port number for sending ARtag id and pose info. */
 #define ARTAG_PORT 8844
+/*! The udp port number for sending sonar measurement. */
 #define SONAR_PORT 8833
-
+/*! The gpio pin number that sonar 1 is connected to. */
 #define SONAR_GPIO1 137
+/*! The gpio pin number that sonar 2 is connected to. */
 #define SONAR_GPIO2 136
+/*! The gpio pin number that sonar 3 is connected to. */
 #define SONAR_GPIO3 135
 
 using namespace std;
 
-// main variables
+/*! Flag to show debug message. */
 bool showDebugMsg = true;
+/*! The end condition to signal quitting of the program. */
 pthread_cond_t endCondition = PTHREAD_COND_INITIALIZER;
+/*! The mutex for the end condition. */
 pthread_mutex_t endMutex = PTHREAD_MUTEX_INITIALIZER;
+/*! Flag to indicate that the program has initialized. */
 bool isInit = false;
+/*! Flag to get ready to quit the program. */
 bool isEnding = false;
+/*! The IP address of the connected host. */
 unsigned long connectedHost = 0;
+/*! The remote socket file descriptor. */
 int remoteSock;
+/*! The socket for iRobot Create. */
 int createUDPsock = -1;
+/*! The sockaddr_in struct that is associated with the video udp port. */
 struct sockaddr_in remoteVideo;
+/*! The sockaddr_in struct that is associated with the ARtag udp port. */
 struct sockaddr_in remoteARtag;
+/*! The sockaddr_in struct that is associated with the Create udp port. */
 struct sockaddr_in remoteCreate;
+/*! The sockaddr_in struct that is associated with the Sonar udp port. */
 struct sockaddr_in remoteSonar;
 
-// class variables
+/*! The camera object for ARtag detection. */
 Camera * camera;
+/*! The create object for iRobot Create teleop. */
 Create * create;
+/*! The sonar object for sonar 1. */
 Sonar * sonar1;
+/*! The sonar object for sonar 2. */
 Sonar * sonar2;
+/*! The sonar object for sonar 3. */
 Sonar * sonar3;
 
+/*! 
+ * 	\brief The error printing function.
+ * 	\param msg the msg to print out.
+ */
 void error(const char *msg)
 {
 	perror(msg);
 	exit(0);
 }
 
+/*! 
+ * 	\brief A function to print debug message.
+ * 	\param func the function name. (put __FUNC__ macro)
+ * 	\param msg any message you desire.
+ */
 void debugMsg(const char *func, const char *msg)
 {
 	if (showDebugMsg)	printf("[%s	] %s\n", func, msg);
 }
 
+/*! 
+ * 	\brief Handles the control for the universal gripper.
+ * 	\param packet The Packet received.
+ */
 void HandleControls(Packet & packet)
 {
 	//debugMsg(__func__, "Sending control is not yet implemented!");	
@@ -82,24 +130,40 @@ void HandleControls(Packet & packet)
 	printf("packet data: %d\n", packet.u.ctrl.data[0]);
 }
 
+/*!
+ * 	\brief Start running ARtag detection.
+ * 	\param arg Any possible argument that is passed in with this thread.
+ */
 void* RunARtagVideo(void* arg)
 {
 	camera->StreamARtagVideo();
 	pthread_exit(NULL);
 }
 
+/*!
+ * 	\brief Start running serial listener for iRobot Create.
+ * 	\param arg Any possible argument that is passed in with this thread.
+ */
 void* CreateSerialListener(void* arg)
 {
 	create->RunSerialListener();
 	pthread_exit(NULL);
 }
 
+/*!
+ * 	\brief Start running UDP listener for iRobot Create.
+ * 	\param arg Any possible argument that is passed in with this thread.
+ */
 void* CreateUDPListener(void* arg)
 {
 	create->RunUDPListener(createUDPsock);
 	pthread_exit(NULL);
 }
 
+/*!
+ * 	\brief Start running sonar measurement and send over the measurement through udp.
+ * 	\param arg Any possible argument that is passed in with this thread.
+ */
 void* SonarSender(void* arg)
 {
 	setpriority(PRIO_PROCESS, 0, -20);
@@ -133,6 +197,10 @@ void* SonarSender(void* arg)
 	pthread_exit(NULL);
 }
 
+/*!
+ * 	\brief Start running dumb load which peg the cpu load at 99%.
+ * 	\param arg Any possible argument that is passed in with this thread.
+ */
 void* Dumbload(void* arg)
 {
 	while(1)
@@ -141,6 +209,10 @@ void* Dumbload(void* arg)
 	pthread_exit(NULL);
 }
 
+/*!
+ * 	\brief Start streaming all the sensor data including sonar, artag, and create.
+ * 	\param arg Any possible argument that is passed in with this thread.
+ */
 void* StreamSensorData(void* arg)
 {
 	debugMsg(__func__, "Start streaming sensor data ...");
@@ -172,9 +244,11 @@ void* StreamSensorData(void* arg)
 		pthread_create(&sonarThread, NULL, SonarSender, NULL));
 
 	// run dumbload
-	/*pthread_t dumbloadThread;
+	#if 0
+	pthread_t dumbloadThread;
 	printf("dumbload Thread: %d.\n", 
-		pthread_create(&dumbloadThread, NULL, Dumbload, NULL));*/
+		pthread_create(&dumbloadThread, NULL, Dumbload, NULL));
+	#endif
 	
 	while(1)
 	{
@@ -212,6 +286,10 @@ void* StreamSensorData(void* arg)
 	pthread_exit(NULL);
 }
 
+/*!
+ * 	\brief Making the connection after the init packet is received. Start streaming sensor data.
+ * 	\param packet The Packet received.
+ */
 void MakeConnection(Packet & packet)
 {
 	if (isInit)
@@ -245,6 +323,10 @@ void MakeConnection(Packet & packet)
 		pthread_create(&sensorThread, NULL, StreamSensorData, NULL));
 }
 
+/*!
+ * 	\brief Process the Packet that is received based on its PacketType.
+ * 	\param packet The Packet received.
+ */
 void ProcessPackets(Packet & packet)
 {
 	switch(packet.type)
@@ -294,6 +376,10 @@ void ProcessPackets(Packet & packet)
 	}
 }
 
+/*!
+ * 	\brief Start listening to any packet coming in from the remote host.
+ * 	\param arg Any possible argument that is passed in with this thread.
+ */
 void* ListenMessage(void* arg)
 {
 	int sock, bufLength;
@@ -335,6 +421,12 @@ void* ListenMessage(void* arg)
 	return 0;
 }
 
+/*!
+ * 	\brief The "main" function, start the listener thread.
+ * 	\param argc The argument size.
+ * 	\param argv The argument value.
+ * 	\return 0 when done.
+ */
 int main(int argc, char *argv[])
 {
 	// loading input parameters
