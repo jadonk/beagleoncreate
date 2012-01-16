@@ -2,19 +2,23 @@
 #define GPIO_H
 
 #include <time.h>
+/*! \file Gpio.h
+ */
 
+/*! GpioVal enum for gpio value. */
 enum GpioVal
 { 
-	HIGH, 
-	LOW,
-	UNKNOWNVAL
+	HIGH, 		/*! gpio value is high. */
+	LOW,		/*! gpio value is low. */
+	UNKNOWNVAL	/*! gpio value is in unknown state?! */
 };
 
+/*! GpioEdge enum for gpio input trigger edge. */
 enum GpioEdge
 {
-	RISING,
-	FALLING,
-	BOTH
+	RISING,		/*! gpio input trigger on rising edge. */
+	FALLING,	/*! gpio input trigger on falling edge. */
+	BOTH		/*! gpio input trigger on both edge. */
 };
 
 class Gpio

@@ -8,9 +8,23 @@
 
 #include "Gpio.h"
 
+/*! \file Gpio.cpp */
+
+/*! The directory for sys_fs gpio handle. */
 #define SYSFS_GPIO_DIR "/sys/class/gpio"
+/*! The buffer size. */
 #define MAX_BUF 64
 
+/*!
+ * 	\class Gpio Gpio.h "Gpio.h"
+ *	\brief This class is the class to handle any gpio related actions.
+ */
+
+/*! \fn Gpio::Gpio(unsigned int pinNum, bool isOut)
+ * 	\brief A constructor for Gpio class. Also export the port in the constructor.
+ * 	\param pinNum the pin number for the gpio.
+ *  \param isOut true if the gpio is initalized as output.
+ */
 Gpio::Gpio(unsigned int pinNum, bool isOut)
 {
 	_curVal = UNKNOWNVAL;		// Make it out of range to force write if out pin
@@ -21,6 +35,9 @@ Gpio::Gpio(unsigned int pinNum, bool isOut)
 	SetDir(isOut);	
 }
 
+/*! \fn Gpio::~Gpio()
+ * 	\brief A destructor for Gpio class. Unexport here.
+ */
 Gpio::~Gpio()
 {
 	if( 0 <= _fd )
@@ -30,6 +47,10 @@ Gpio::~Gpio()
 	}
 }
 
+/*! \fn int Gpio::Export()
+ * 	\brief Export the gpio pin for sys_fs.
+ * 	\return 0 on success, -1 on fail.
+ */
 int Gpio::Export()
 {
 	int fd, len;
@@ -48,6 +69,10 @@ int Gpio::Export()
 	return 0;
 }
 
+/*! \fn int Gpio::Unexport()
+ * 	\brief Unexport the gpio pin for sys_fs.
+ * 	\return 0 on success, -1 on fail.
+ */
 int Gpio::Unexport()
 {
 	int fd, len;
@@ -66,6 +91,11 @@ int Gpio::Unexport()
 	return 0;
 }
 
+/*! \fn int Gpio::SetDir(bool out)
+ * 	\brief Set the gpio pin direction.
+ * 	\param out True if wants to set the pin as an output. False otherwise.
+ * 	\return 0 on success, -1 on fail.
+ */
 int Gpio::SetDir(bool out)
 {
 	int fd, len;
@@ -90,6 +120,11 @@ int Gpio::SetDir(bool out)
 	return 0;
 }
 
+/*! \fn int Gpio::SetValue(GpioVal value)
+ * 	\brief Set the gpio pin value when the gpio pin is in output mode.
+ * 	\param value HIGH or LOW.
+ * 	\return 0 on success, -1 on fail.
+ */
 int Gpio::SetValue(GpioVal value)
 {
 	if( _isOut && _curVal != value )
@@ -114,6 +149,11 @@ int Gpio::SetValue(GpioVal value)
 	return 0;
 }
 
+/*! \fn int Gpio::GetValue(GpioVal & value)
+ * 	\brief Get the gpio pin value when the pin is in input mode.
+ * 	\param value The value HIGH or LOW of the gpio input reading.
+ * 	\return 0 on success, -1 on fail.
+ */
 int Gpio::GetValue(GpioVal & value)
 {
 	if( !_isOut )
@@ -135,6 +175,11 @@ int Gpio::GetValue(GpioVal & value)
 	return 0;
 }
 
+/*! \fn int Gpio::SetEdge(GpioEdge edge)
+ * 	\brief Set the trigger edge when the gpio is in input mode.
+ * 	\param edge RISING, FALLING, or BOTH.
+ * 	\return 0 on success, -1 on fail.
+ */
 int Gpio::SetEdge(GpioEdge edge)
 {
 	int fd, len;
@@ -168,6 +213,9 @@ int Gpio::SetEdge(GpioEdge edge)
 	return 0;
 }
 
+/*! \fn void Gpio::OpenFd()
+ * 	\brief Initialized the file descriptor for the gpio pin.
+ */
 void Gpio::OpenFd()
 {
 	int len;
@@ -188,11 +236,20 @@ void Gpio::OpenFd()
 	}
 }
 
+/*! \fn void Gpio::CloseFd()
+ * 	\brief Close the file descriptor for this gpio pin.
+ */
 void Gpio::CloseFd()
 {
 	close(_fd);
 }
 
+/*! \fn int Gpio::Poll(int usec, struct timespec & timeOfInterrupt)
+ * 	\brief Polling the gpio input and record the time when the trigger occurred.
+ *  \param usec The timeout periold for polling in microsecond.
+ * 	\param timeOfInterrupt The recorded time when the triggering occurred.
+ * 	\return 0 if the timeout occurred, > 0 if triggering happened, -1 if something went wrong.
+ */
 int Gpio::Poll(int usec, struct timespec & timeOfInterrupt)
 {
 	int len;

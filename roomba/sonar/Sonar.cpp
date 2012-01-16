@@ -7,8 +7,20 @@
 
 #include "Sonar.h"
 
+/*! \file Sonar.cpp */
+
+/*! Polling timeout on each sonar reading. */
 #define POLL_TIMEOUT 100
 
+/*!
+ * 	\class Sonar Sonar.h "Sonar.h"
+ *	\brief This class is the class handle sonar related stuff.
+ */
+
+/*! \fn Sonar::Sonar(unsigned int gpioPinNum)
+ * 	\brief A constructor for the Sonar class. It calls the constructor for Gpio.
+ * 	\param gpioPinNum The gpio pin number that this sonar is plugged into.
+ */
 Sonar::Sonar(unsigned int gpioPinNum)
 {
 	_gpio = new Gpio(gpioPinNum);
@@ -17,11 +29,18 @@ Sonar::Sonar(unsigned int gpioPinNum)
 	isEnding = false;
 }
 
+/*! \fn Sonar::~Sonar()
+ * 	\brief A destructor for the Sonar class. It calls the destructor for Gpio.
+ */
 Sonar::~Sonar()
 {
 	delete _gpio;
 }
 
+/*! \fn struct timespec Sonar::TimeDiff()
+ * 	\brief A helper class to find out the time elapsed between the falling trigger and rising trigger.
+ * 	\return the difference in time.
+ */
 struct timespec Sonar::TimeDiff()
 {
 	struct timespec temp;
@@ -38,6 +57,10 @@ struct timespec Sonar::TimeDiff()
 	return temp;
 }
 
+/*! \fn float Sonar::DisplayMeasurement()
+ * 	\brief Calculate the distance measurement from the time of flight.
+ * 	\return The distance calculated.
+ */
 float Sonar::DisplayMeasurement()
 {
 	if (TimeDiff().tv_sec == 0)
@@ -54,15 +77,21 @@ float Sonar::DisplayMeasurement()
 			{
 				_maxDist = dist;
 			}
-			/*printf("Time taken is: %fs\n", time);
+			#if 0
+			// no longer want to print out the message.
+			printf("Time taken is: %fs\n", time);
 			printf("Dist is: %fm\t minDist: %fm\t maxDist: %fm\n", dist, _minDist, _maxDist);
-			fflush(stdout);*/
+			fflush(stdout);
+			#endif
 			return dist;
 		}
 	}
 	return 0.f;
 }
 
+/*! \fn void Sonar::StartPulse()
+ * 	\brief Start the pulse to request a sonar measurement.
+ */
 void Sonar::StartPulse()
 {
 	_gpio->SetDir(true);
@@ -73,6 +102,10 @@ void Sonar::StartPulse()
 	_gpio->SetValue(LOW);
 }
 
+/*! \fn float Sonar::Run()
+ * 	\brief The main loop/function of the Sonar class.
+ * 	\return The distance measurement of from the sonar.
+ */
 float Sonar::Run()
 {
 	StartPulse();
