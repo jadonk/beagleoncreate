@@ -1,5 +1,7 @@
 #include "ARtag.h"
 #include <ARToolKitPlus/TrackerSingleMarker.h>
+/*! \file ARtagLocalizer.h
+ */
 
 /*! 
    Set the max ARtag ID that is detectable.
@@ -19,6 +21,8 @@ public:
 	void setARtagOffset(float x_offset, float y_offset, float yaw_offset);
 	int cleanupARtagPose(void);
 
+	/*! a boolean to say we are all done
+	 */
 	static bool allStop;
 	
 private:

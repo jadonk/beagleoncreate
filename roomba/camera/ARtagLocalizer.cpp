@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include "ARtagLocalizer.h"
+/*! \file ARtagLocalizer.cpp
+ */
+
 /*!
   Set the fudge factor for multiplying the ARtag pose.
 */
@@ -7,10 +10,15 @@
 
 using namespace std;
 
+/*! The border thickness in meter when using thin artag pattern. */
 const float THIN_PATTERN_BORDER = 0.125;
+/*! The border thickness in meter when using thick artag pattern. */
 const float THICK_PATTERN_BORDER = 0.25;
 
 bool ARtagLocalizer::allStop = false;
+
+/*! The calibration file path string, don't forget to change this when you change your camera.
+ */
 char calibFilename[] = "MS_LifeCam_VX700.cal";
 
 /*!

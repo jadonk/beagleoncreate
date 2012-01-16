@@ -3,6 +3,9 @@
 #include "cv.h"
 #include "highgui.h"
 
+/*! \file ARtag.h
+ */
+
 class ARtag
 {
 	public:

@@ -1,5 +1,8 @@
 #include "ARtag.h"
 
+/*! \file ARtag.cpp
+ */
+
 /**
  * 	\class ARtag ARtag.h "ARtag.h"
  *	\brief ARtag class which holds information like tag ID and pose matrix for the ARtag.

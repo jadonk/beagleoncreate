@@ -9,6 +9,9 @@
 #include "../Packet.h"
 #include "Camera.h"
 
+/*! \file Camera.cpp
+ */
+
 /*!
   Set the image channel used for gstreamer.
 */
@@ -16,6 +19,7 @@
 
 using namespace cv;
 
+/*! The only Camera object that this program should have. */
 extern Camera * camera;
 
 /**

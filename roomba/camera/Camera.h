@@ -12,6 +12,9 @@
 
 #include "ARtagLocalizer.h"
 
+/*! \file Camera.h
+ */
+
 /*!
   Set the app source name for gstreamer.
 */
