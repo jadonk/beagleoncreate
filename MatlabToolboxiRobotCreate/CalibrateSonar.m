@@ -28,17 +28,16 @@ disp('object and hold it perpendicular to the direction the sonar sensor is faci
 
 % Take a series of measurements
 d_measured = zeros(3,size(TEST_DISTANCES));
-for j = 1:length(TEST_DISTANCES)
-    fprintf(2, '\n(Step %d/%d) Please place the object %gcm (%g/4 the length of letter-size paper) away and then press ENTER...\n', j, length(TEST_DISTANCES), TEST_DISTANCES(j)*100, j);
-    pause
-    dist = ReadSonar(ports);
-    d_measured(1,j) = dist.sonar1;
-    d_measured(2,j) = dist.sonar2;
-    d_measured(3,j) = dist.sonar3;
+for i = 1:3
+    for j = 1:length(TEST_DISTANCES)
+        fprintf(2, '\n(Step %d/%d) Please place the object %gcm (%g/4 the length of letter-size paper) away from sonar %g and then press ENTER...\n', j, length(TEST_DISTANCES), TEST_DISTANCES(j)*100, j, i);
+        pause
+        dist = ReadSonar(ports);
+        d = [dist.sonar1 dist.sonar2 dist.sonar3];
+        d_measured(i,j) = d(i);
 
-    fprintf(2, ' measured a sonar 1 distance of %2.2gm\n', d_measured(1,j));
-    fprintf(2, ' measured a sonar 2 distance of %2.2gm\n', d_measured(2,j));
-    fprintf(2, ' measured a sonar 3 distance of %2.2gm\n', d_measured(3,j));
+        fprintf(2, ' measured a sonar %g distance of %2.2gm\n', i, d_measured(i,j));
+    end
 end
 
 % Calculate offset
