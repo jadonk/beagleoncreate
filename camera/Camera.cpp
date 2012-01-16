@@ -230,7 +230,7 @@ int Camera::StreamARtagVideo()
 
 	// Iterate
 	printf("Running ARtag detection.\n");
-	QuitMainLoop();
+	g_main_loop_run(loop);
 
 	// Out of the main loop, clean up nicely
 	CleanUp();
