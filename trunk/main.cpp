@@ -58,8 +58,6 @@ bool isEnding = false;
 unsigned long connectedHost = 0;
 /*! The remote UDP socket file descriptor. */
 int remoteSockUDP;
-/*! The socket for iRobot Create. */
-int createUDPsock = -1;
 /*! The sockaddr_in struct that is associated with the video udp port. */
 struct sockaddr_in remoteVideo;
 /*! The sockaddr_in struct that is associated with the ARtag udp port. */
@@ -162,12 +160,12 @@ void* CreateSerialListener(void* arg)
 }
 
 /*!
- * 	\brief Start running UDP listener for iRobot Create.
+ * 	\brief Start running TCP listener for iRobot Create.
  * 	\param arg Any possible argument that is passed in with this thread.
  */
-void* CreateUDPListener(void* arg)
+void* CreateTCPListener(void* arg)
 {
-	create->RunUDPListener(createUDPsock);
+	create->RunTCPListener();
 	pthread_exit(NULL);
 }
 
@@ -245,9 +243,9 @@ void* StreamSensorData(void* arg)
 	printf("iRobot Create SerialListner Thread: %d.\n", 
 		pthread_create(&createSerialThread, NULL, CreateSerialListener, NULL));
 
-	pthread_t createUDPThread;
-	printf("iRobot Create UDPListner Thread: %d.\n", 
-		pthread_create(&createUDPThread, NULL, CreateUDPListener, NULL));
+	pthread_t createTCPThread;
+	printf("iRobot Create TCPListner Thread: %d.\n", 
+		pthread_create(&createTCPThread, NULL, CreateTCPListener, NULL));
 		
 	// run sonar
 	pthread_t sonarThread;

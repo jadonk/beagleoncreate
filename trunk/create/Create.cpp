@@ -192,70 +192,29 @@ int Create::RunSerialListener()
 	return 0;
 }
 
-/*! \fn int timeout_recvfrom(int sock, void *data, int len, struct sockaddr * sockfrom, socklen_t *fromlen, int timeoutInSec)
- * 	\brief A recvfrom helper function with timeout.
- *  \param sock The sock to receive from.
- * 	\param data The data buffer to copy the received data.
- * 	\param len The size of the data received.
- * 	\param sockfrom The remote socket info.
- * 	\param fromlen The size of that socket info.
- * 	\param timeoutInSec The desired time out in second.
- *	\return The length of the received data if there is something, 0 if timed out.
+/*! \fn int Create::RunTCPListener(int & sock)
+ * 	\brief The main loop of the TCP listener.
+ * 	\return 0 on success, -1 on fail.
  */
-#if 0
-int timeout_recvfrom(int sock, void *data, int len, struct sockaddr * sockfrom, socklen_t *fromlen, int timeoutInSec)
+int Create::RunTCPListener()
 {
-	fd_set socks;
-	struct timeval timeout;
-	FD_ZERO(&socks);
-	FD_SET(sock, &socks);
-	timeout.tv_sec = timeoutInSec;
-	if (select(sock + 1, &socks, NULL, NULL, &timeout))
-		return recvfrom(sock, data, len, 0, sockfrom, fromlen);
-	else
-		return 0;
-}
-#endif
-
-extern int timeout_recvfrom(int sock, void *data, int len, struct sockaddr * sockfrom, socklen_t *fromlen, int timeoutInSec);
-
-/*! \fn int Create::InitUDPListener()
- *  \brief Initialize the UDP listener to listen to udp packet for talking to iRobot Create.
- * 	\return The socket file descriptor.
- */
-int Create::InitUDPListener()
-{
-	int sock;
-	socklen_t serverlen;
+	int sock, clientsock, bufLength;
+	socklen_t serverlen, fromlen;
 	struct sockaddr_in server;
-	// initialize udp listener
+	struct sockaddr_in from;
+	char buf[MAXPACKETSIZE];
+
+	// initialize tcp listener
 	sock = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock < 0) printf("ERROR: Opening socket\n");
+	if (sock < 0) error("Opening socket");
 	serverlen = sizeof(server);
 	bzero(&server, serverlen);
 	server.sin_family = AF_INET;
 	server.sin_addr.s_addr = INADDR_ANY;
 	server.sin_port = htons(CREATE_PORT);
-	if (bind(sock, (struct sockaddr *)&server, serverlen) < 0) 
-		printf("ERROR: binding\n");
-	return sock;
-}
-
-/*! \fn int Create::RunUDPListener(int & sock)
- * 	\brief The main loop of the UDP listener.
- * 	\param sock The socket to listen to. If didn't call InitUDPListener, I will do that for you.
- * 	\return 0 on success, -1 on fail.
- */
-int Create::RunUDPListener(int & sock)
-{
-	int clientsock, bufLength;
-	socklen_t fromlen;
-	struct sockaddr_in from;
-	char buf[MAXPACKETSIZE];
-
-	if (sock == -1)	sock = InitUDPListener();
-
+	if (bind(sock, (struct sockaddr *)&server, serverlen) < 0) error("binding");
 	fromlen = sizeof(struct sockaddr_in);
+
 	printf("Ready to listen to Create message ...\n");
 	if (listen(sock, 1) < 0) 
 	{
