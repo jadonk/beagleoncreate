@@ -16,7 +16,7 @@ function CalibrateSonar(ports)
 %   See also ReadSonar and TestSonar.
 
 global SONAR_OFFSET;
-
+SONAR_OFFSET = [0 0 0];
 %TEST_DISTANCES = [0.1, 0.2, 0.3]; % meters
 TEST_DISTANCES = [1/4, 1/2, 3/4, 1]*11*0.0254; % meters
 
@@ -27,7 +27,7 @@ disp('(NOTE: For calibration, it is recommended that you use a large, flat');
 disp('object and hold it perpendicular to the direction the sonar sensor is facing.)');
 
 % Take a series of measurements
-d_measured = zeros(3,size(TEST_DISTANCES));
+d_measured = zeros(3,length(TEST_DISTANCES));
 for i = 1:3
     for j = 1:length(TEST_DISTANCES)
         fprintf(2, '\n(Step %d/%d) Please place the object %gcm (%g/4 the length of letter-size paper) away from sonar %g and then press ENTER...\n', j, length(TEST_DISTANCES), TEST_DISTANCES(j)*100, j, i);

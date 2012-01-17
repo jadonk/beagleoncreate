@@ -16,7 +16,7 @@ function CalibrateBeacon(ports)
 %   See also ReadBeacon
 
 global BEACON_OFFSET;
-
+BEACON_OFFSET = 0;
 %TEST_DISTANCES = [0.1, 0.2, 0.3]; % meters
 TEST_DISTANCES = [1/4, 1/2, 3/4, 1]*11*0.0254; % meters
 
