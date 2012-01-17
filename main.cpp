@@ -39,6 +39,9 @@ This is a test application.
 /*! The gpio pin number that sonar 3 is connected to. */
 #define SONAR_GPIO3 135
 
+/*! Max connection requests */
+#define MAXPENDING 1
+
 using namespace std;
 
 /*! Flag to show debug message. */
@@ -53,16 +56,14 @@ bool isInit = false;
 bool isEnding = false;
 /*! The IP address of the connected host. */
 unsigned long connectedHost = 0;
-/*! The remote socket file descriptor. */
-int remoteSock;
+/*! The remote UDP socket file descriptor. */
+int remoteSockUDP;
 /*! The socket for iRobot Create. */
 int createUDPsock = -1;
 /*! The sockaddr_in struct that is associated with the video udp port. */
 struct sockaddr_in remoteVideo;
 /*! The sockaddr_in struct that is associated with the ARtag udp port. */
 struct sockaddr_in remoteARtag;
-/*! The sockaddr_in struct that is associated with the Create udp port. */
-struct sockaddr_in remoteCreate;
 /*! The sockaddr_in struct that is associated with the Sonar udp port. */
 struct sockaddr_in remoteSonar;
 
@@ -95,6 +96,23 @@ void error(const char *msg)
 void debugMsg(const char *func, const char *msg)
 {
 	if (showDebugMsg)	printf("[%s	] %s\n", func, msg);
+}
+
+int timeout_recvfrom(int sock, void* data, int len, struct sockaddr * sockfrom, socklen_t *fromlen, int timeoutInSec)
+{
+	fd_set socks;
+	struct timeval timeout;
+	FD_ZERO(&socks);
+	FD_SET(sock, &socks);
+	timeout.tv_sec = timeoutInSec;
+	int ret = select(sock + 1, &socks, NULL, NULL, &timeout);
+	if ((ret == 1) && (FD_ISSET(sock, &socks)))
+	{
+		printf("selected\n");
+		return recvfrom(sock, data, len, 0, sockfrom, fromlen);
+	}
+	else
+		return 0;
 }
 
 /*! 
@@ -183,7 +201,7 @@ void* SonarSender(void* arg)
 			packet.u.sonar.dist1 = dist1;
 			packet.u.sonar.dist2 = dist2;
 			packet.u.sonar.dist3 = dist3;
-			if (sendto(remoteSock, (unsigned char*)&packet, sizeof(packet), 0, (const struct sockaddr *)&remoteSonar, sizeof(struct sockaddr_in)) < 0) printf("sendto\n");
+			if (sendto(remoteSockUDP, (unsigned char*)&packet, sizeof(packet), 0, (const struct sockaddr *)&remoteSonar, sizeof(struct sockaddr_in)) < 0) printf("sendto\n");
 		}
 		usleep(SONAR_MEASURE_RATE);
 	}
@@ -211,8 +229,8 @@ void* StreamSensorData(void* arg)
 	debugMsg(__func__, "Start streaming sensor data ...");
 	isInit = true;
 	
-	camera = new Camera(remoteSock, remoteVideo, remoteARtag);
-	create = new Create(remoteSock, remoteCreate, connectedHost);
+	camera = new Camera(remoteSockUDP, remoteVideo, remoteARtag);
+	create = new Create(connectedHost);
 	sonar1 = new Sonar(SONAR_GPIO1);
 	sonar2 = new Sonar(SONAR_GPIO2);
 	sonar3 = new Sonar(SONAR_GPIO3);
@@ -290,8 +308,8 @@ void MakeConnection(Packet & packet)
 		debugMsg(__func__, "Connection is already occupied.");
 		return;
 	}
-	remoteSock = socket(AF_INET, SOCK_DGRAM, 0);
-	if (remoteSock < 0) error("socket");
+	remoteSockUDP = socket(AF_INET, SOCK_DGRAM, 0);
+	if (remoteSockUDP < 0) error("socket UDP");
 
 	remoteVideo.sin_family = AF_INET;
 	remoteVideo.sin_addr.s_addr = packet.addr.s_addr;
@@ -300,10 +318,6 @@ void MakeConnection(Packet & packet)
 	remoteARtag.sin_family = AF_INET;
 	remoteARtag.sin_addr.s_addr = packet.addr.s_addr;
 	remoteARtag.sin_port = htons(ARTAG_PORT);
-
-	remoteCreate.sin_family = AF_INET;
-	remoteCreate.sin_addr.s_addr = packet.addr.s_addr;
-	remoteCreate.sin_port = htons(CREATE_PORT);
 
 	remoteSonar.sin_family = AF_INET;
 	remoteSonar.sin_addr.s_addr = packet.addr.s_addr;
@@ -375,7 +389,7 @@ void ProcessPackets(Packet & packet)
  */
 void* ListenMessage(void* arg)
 {
-	int sock, bufLength;
+	int sock, clientsock, bufLength;
 	socklen_t serverlen, fromlen;
 	struct sockaddr_in server;
 	struct sockaddr_in from;
@@ -383,7 +397,7 @@ void* ListenMessage(void* arg)
 	Packet packet;
 
 	// initialize udp listener
-	sock = socket(AF_INET, SOCK_DGRAM, 0);
+	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock < 0) error("Opening socket");
 	serverlen = sizeof(server);
 	bzero(&server, serverlen);
@@ -393,14 +407,28 @@ void* ListenMessage(void* arg)
 	if (bind(sock, (struct sockaddr *)&server, serverlen) < 0) error("binding");
 	fromlen = sizeof(struct sockaddr_in);
 
+	// Listen on the server socket
 	debugMsg(__func__, "Waiting for INIT message ...");
+	if (listen(sock, MAXPENDING) < 0) error("listen");
+
+	if ((clientsock = accept(sock, (struct sockaddr *) &from, &fromlen)) < 0)
+		error("failed to accept client connection");
 	while(1)
 	{
 		bzero(&buf, sizeof(buf));
 		bzero(&packet, sizeof(Packet));
 		packet.type = UNKNOWN;
-		bufLength = recvfrom(sock, buf, MAXPACKETSIZE, 
+
+#if 0
+		bufLength = timeout_recvfrom(sock, buf, MAXPACKETSIZE, 
+				(struct sockaddr *) &from, &fromlen, 1);
+#endif
+#if 1 
+		// using the timed out version of recvfrom now
+		bufLength = recvfrom(clientsock, buf, MAXPACKETSIZE, 
 				0, (struct sockaddr *)&from, &fromlen);
+#endif
+		if (bufLength == 0) continue;
 		if (bufLength < 0) error("recvfrom");
 
 		memcpy((unsigned char*)&packet, buf, 256);

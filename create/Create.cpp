@@ -29,11 +29,9 @@
  * 	\param createPort The port for sending and receiving stuff for Create.
  * 	\param connectedHost The connected host's ip address to avoid muliple connection.
  */
-Create::Create(int sock, struct sockaddr_in & createPort, unsigned long connectedHost)
+Create::Create(unsigned long connectedHost)
 {
 	_fd = -1;
-	_sock = sock;
-	_createPort = createPort;
 	_connectedHost = connectedHost;
 	isEnding = false;
 	pthread_mutex_init(&_serialMutex, NULL);
@@ -176,7 +174,11 @@ int Create::RunSerialListener()
 				bufLength = read(_fd, buf, MAXPACKETSIZE);
 				pthread_mutex_unlock(&_serialMutex);
 
+				if (send(_sock, buf, bufLength, 0) != bufLength)
+					printf("ERROR: send\n");
+#if 0
 				if (sendto(_sock, buf, bufLength, 0, (const struct sockaddr *) &_createPort, sizeof(struct sockaddr_in)) < 0) printf("ERROR: sendto\n");
+#endif
 				printf("Received from Create: \n");
 				for (int i = 0; i < bufLength; i++)
 				{	
@@ -200,6 +202,7 @@ int Create::RunSerialListener()
  * 	\param timeoutInSec The desired time out in second.
  *	\return The length of the received data if there is something, 0 if timed out.
  */
+#if 0
 int timeout_recvfrom(int sock, void *data, int len, struct sockaddr * sockfrom, socklen_t *fromlen, int timeoutInSec)
 {
 	fd_set socks;
@@ -212,6 +215,9 @@ int timeout_recvfrom(int sock, void *data, int len, struct sockaddr * sockfrom, 
 	else
 		return 0;
 }
+#endif
+
+extern int timeout_recvfrom(int sock, void *data, int len, struct sockaddr * sockfrom, socklen_t *fromlen, int timeoutInSec);
 
 /*! \fn int Create::InitUDPListener()
  *  \brief Initialize the UDP listener to listen to udp packet for talking to iRobot Create.
@@ -223,7 +229,7 @@ int Create::InitUDPListener()
 	socklen_t serverlen;
 	struct sockaddr_in server;
 	// initialize udp listener
-	sock = socket(AF_INET, SOCK_DGRAM, 0);
+	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock < 0) printf("ERROR: Opening socket\n");
 	serverlen = sizeof(server);
 	bzero(&server, serverlen);
@@ -242,7 +248,7 @@ int Create::InitUDPListener()
  */
 int Create::RunUDPListener(int & sock)
 {
-	int bufLength;
+	int clientsock, bufLength;
 	socklen_t fromlen;
 	struct sockaddr_in from;
 	char buf[MAXPACKETSIZE];
@@ -251,6 +257,19 @@ int Create::RunUDPListener(int & sock)
 
 	fromlen = sizeof(struct sockaddr_in);
 	printf("Ready to listen to Create message ...\n");
+	if (listen(sock, 1) < 0) 
+	{
+		printf("failed to listen on Create socket\n");
+		return -1;
+	}
+	printf("end of listen TCP socket %d\n", sock);
+	if ((clientsock = accept(sock, (struct sockaddr *) &from, &fromlen)) < 0)
+	{
+		printf("failed to accept client connection on Create socket\n");
+	       return -1;	
+	}
+	printf("accepted the Create TCP connection\n");
+	_sock = clientsock;
 	while(1)
 	{
 		if (isEnding)
@@ -260,11 +279,12 @@ int Create::RunUDPListener(int & sock)
 		}
 		
 		bzero(&buf, sizeof(buf));
-		bufLength = timeout_recvfrom(sock, buf, MAXPACKETSIZE, 
+#if 0
+		bufLength = timeout_recvfrom(_sock, buf, MAXPACKETSIZE, 
 				(struct sockaddr *) &from, &fromlen, 1);
-		#if 0
-		// using the timed out version of recvfrom now
-		bufLength = recvfrom(sock, buf, MAXPACKETSIZE, 
+#endif
+		#if 1
+		bufLength = recvfrom(clientsock, buf, MAXPACKETSIZE, 
 				0, (struct sockaddr *)&from, &fromlen);
 		#endif
 
