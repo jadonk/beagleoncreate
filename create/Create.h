@@ -20,7 +20,7 @@ public:
 	void CloseSerial();
 	void SendSerial(char* buf, int bufLength);
 	int RunSerialListener();
-	int RunUDPListener(int & sock);
+	int RunTCPListener();
 	
 	/*! Flag to get the Create class ready to quit. */
 	bool isEnding;
@@ -31,8 +31,6 @@ private:
 	unsigned long _connectedHost;
 
 	pthread_mutex_t _serialMutex;
-	
-	int InitUDPListener();
 };
 
 #endif
