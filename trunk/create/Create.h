@@ -13,7 +13,7 @@
 class Create
 {
 public:
-	Create(int sock, struct sockaddr_in & createPort, unsigned long connectedHost);
+	Create(unsigned long connectedHost);
 	~Create();
 	
 	int InitSerial();
@@ -28,7 +28,6 @@ public:
 private:
 	int _fd;
 	int _sock;
-	struct sockaddr_in _createPort;
 	unsigned long _connectedHost;
 
 	pthread_mutex_t _serialMutex;
