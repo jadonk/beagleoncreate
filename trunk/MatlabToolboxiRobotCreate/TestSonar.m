@@ -55,7 +55,7 @@ try
         d = ReadSonar(ports);
 
         % Wait a tic
-%         pause(0.5)
+        pause(0.5)
 
         % Update the plot
         if ROTATE

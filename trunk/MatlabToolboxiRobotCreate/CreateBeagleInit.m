@@ -18,14 +18,17 @@ function ports = CreateBeagleInit(remoteHost)
 global td
 td = 0.015;
 
-createPort = 8888;
+createPort = 8865;
 beaglePort = 8866;
 artagPort = 8844;
 sonarPort = 8833;
 
+% use TCP for control commands
+ports.create = tcpip(remoteHost, createPort, 'LocalPort', createPort);
+ports.beagle = tcpip(remoteHost, beaglePort, 'LocalPort', beaglePort);
 % get UDP packet from the remote host
-ports.create = udp(remoteHost, createPort, 'LocalPort', createPort);
-ports.beagle = udp(remoteHost, beaglePort, 'LocalPort', beaglePort);
+% ports.create = udp(remoteHost, createPort, 'LocalPort', createPort);
+% ports.beagle = udp(remoteHost, beaglePort, 'LocalPort', beaglePort);
 ports.beacon = udp(remoteHost, artagPort, 'LocalPort', artagPort);
 ports.sonar = udp(remoteHost, sonarPort, 'LocalPort', sonarPort);
 
@@ -36,13 +39,16 @@ set(ports.sonar,'Timeout',0.2)
 warning off
 
 disp('Opening connection to iRobot Create...');
-fopen(ports.create);
 fopen(ports.beagle);
+pause(0.5)
+fwrite(ports.beagle,PacketType.INIT);
+pause(1)
+
+fopen(ports.create);
 fopen(ports.beacon);
 fopen(ports.sonar);
 
-fwrite(ports.beagle,PacketType.INIT);
-pause(.5)
+pause(0.5)
 %% Confirm two way connumication
 disp('Setting iRobot Create to Control Mode...');
 % Start! and see if its alive
@@ -70,4 +76,5 @@ disp('I am alive if my two outboard lights came on')
 
 % confirmation = (fread(ports.create,4))
 pause(.1)
+
 end
