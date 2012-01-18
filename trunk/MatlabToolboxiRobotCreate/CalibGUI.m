@@ -1,26 +1,26 @@
 function varargout = CalibGUI(varargin)
-% GUI M-file for CalibGUI.fig
-%      GUI, by itself, creates a new GUI or raises the existing
+% CALIBGUI M-file for CalibGUI.fig
+%      CalibGUI, by itself, creates a new GUI or raises the existing
 %      singleton*.
 %
-%      H = GUI returns the handle to a new GUI or the handle to
+%      H = CalibGUI(ports) returns the handle to a new GUI or the handle to
 %      the existing singleton*.
 %
-%      GUI('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in GUI.M with the given input arguments.
+%      CalibGUI('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in CalibGUI.M with the given input arguments.
 %
-%      GUI('Property','Value',...) creates a new GUI or raises the
+%      CalibGUI('Property','Value',...) creates a new GUI or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
 %      applied to the GUI before gui_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
 %      stop.  All inputs are passed to gui_OpeningFcn via varargin.
 %
-%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
+%      *See CalibGUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
 %
-% See also: GUIDE, GUIDATA, GUIHANDLES
+% See also: CreateBeagleInit, GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help gui
+% Edit the above text to modify the response to help CalibGUI
 
 % Last Modified by GUIDE v2.5 16-Jan-2012 15:44:27
 
