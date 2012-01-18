@@ -54,8 +54,6 @@ pthread_mutex_t endMutex = PTHREAD_MUTEX_INITIALIZER;
 bool isInit = false;
 /*! Flag to get ready to quit the program. */
 bool isEnding = false;
-/*! The IP address of the connected host. */
-unsigned long connectedHost = 0;
 /*! The remote UDP socket file descriptor. */
 int remoteSockUDP;
 /*! The sockaddr_in struct that is associated with the video udp port. */
@@ -64,6 +62,8 @@ struct sockaddr_in remoteVideo;
 struct sockaddr_in remoteARtag;
 /*! The sockaddr_in struct that is associated with the Sonar udp port. */
 struct sockaddr_in remoteSonar;
+/*! The sensor thread for streaming all sensor data to the MATLAB. */
+pthread_t sensorThread;
 
 /*! The camera object for ARtag detection. */
 Camera * camera;
@@ -94,23 +94,6 @@ void error(const char *msg)
 void debugMsg(const char *func, const char *msg)
 {
 	if (showDebugMsg)	printf("[%s	] %s\n", func, msg);
-}
-
-int timeout_recvfrom(int sock, void* data, int len, struct sockaddr * sockfrom, socklen_t *fromlen, int timeoutInSec)
-{
-	fd_set socks;
-	struct timeval timeout;
-	FD_ZERO(&socks);
-	FD_SET(sock, &socks);
-	timeout.tv_sec = timeoutInSec;
-	int ret = select(sock + 1, &socks, NULL, NULL, &timeout);
-	if ((ret == 1) && (FD_ISSET(sock, &socks)))
-	{
-		printf("selected\n");
-		return recvfrom(sock, data, len, 0, sockfrom, fromlen);
-	}
-	else
-		return 0;
 }
 
 /*! 
@@ -150,12 +133,12 @@ void* RunARtagVideo(void* arg)
 }
 
 /*!
- * 	\brief Start running serial listener for iRobot Create.
+ * 	\brief Start running serial handler for iRobot Create.
  * 	\param arg Any possible argument that is passed in with this thread.
  */
-void* CreateSerialListener(void* arg)
+void* CreateSerialHandler(void* arg)
 {
-	create->RunSerialListener();
+	create->RunSerialHandler();
 	pthread_exit(NULL);
 }
 
@@ -228,7 +211,7 @@ void* StreamSensorData(void* arg)
 	isInit = true;
 	
 	camera = new Camera(remoteSockUDP, remoteVideo, remoteARtag);
-	create = new Create(connectedHost);
+	create = new Create();
 	sonar1 = new Sonar(SONAR_GPIO1);
 	sonar2 = new Sonar(SONAR_GPIO2);
 	sonar3 = new Sonar(SONAR_GPIO3);
@@ -240,8 +223,8 @@ void* StreamSensorData(void* arg)
 	
 	// run create control	
 	pthread_t createSerialThread;
-	printf("iRobot Create SerialListner Thread: %d.\n", 
-		pthread_create(&createSerialThread, NULL, CreateSerialListener, NULL));
+	printf("iRobot Create SerialHandler Thread: %d.\n", 
+		pthread_create(&createSerialThread, NULL, CreateSerialHandler, NULL));
 
 	pthread_t createTCPThread;
 	printf("iRobot Create TCPListner Thread: %d.\n", 
@@ -266,7 +249,6 @@ void* StreamSensorData(void* arg)
 		{
 			isEnding = false;
 			pthread_mutex_unlock( &endMutex );
-			connectedHost = 0;
 			camera->QuitMainLoop();
 			create->isEnding = true;
 			sonar1->isEnding = true;
@@ -321,9 +303,6 @@ void MakeConnection(Packet & packet)
 	remoteSonar.sin_addr.s_addr = packet.addr.s_addr;
 	remoteSonar.sin_port = htons(SONAR_PORT);
 
-	connectedHost = packet.addr.s_addr;
-
-	pthread_t sensorThread;
 	printf("Sensor Thread: %d.\n", 
 		pthread_create(&sensorThread, NULL, StreamSensorData, NULL));
 }
@@ -353,14 +332,7 @@ void ProcessPackets(Packet & packet)
 			break;
 		case CTRL:
 			debugMsg(__func__, "======= packet received, type: CTRL");
-			if (connectedHost == packet.addr.s_addr)
-			{
-				HandleControls(packet);
-			}
-			else
-			{
-				debugMsg(__func__, "There is no connection made with this client, please INIT first");
-			}
+			HandleControls(packet);
 			break;
 		case DATA:
 			debugMsg(__func__, "======= packet received, type: DATA");
@@ -417,15 +389,9 @@ void* ListenMessage(void* arg)
 		bzero(&packet, sizeof(Packet));
 		packet.type = UNKNOWN;
 
-#if 0
-		bufLength = timeout_recvfrom(sock, buf, MAXPACKETSIZE, 
-				(struct sockaddr *) &from, &fromlen, 1);
-#endif
-#if 1 
-		// using the timed out version of recvfrom now
 		bufLength = recvfrom(clientsock, buf, MAXPACKETSIZE, 
 				0, (struct sockaddr *)&from, &fromlen);
-#endif
+
 		if (bufLength == 0) continue;
 		if (bufLength < 0) error("recvfrom");
 
@@ -436,6 +402,7 @@ void* ListenMessage(void* arg)
 		if (packet.type == END) debugMsg(__func__, "Waiting for INIT message ...");
 		if (packet.type == SHUTDOWN) break;
 	}
+	pthread_join(sensorThread, NULL);
 	usleep(2000000);
 	close(sock);
 
