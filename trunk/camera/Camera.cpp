@@ -93,19 +93,19 @@ void Camera::SendARtag()
 	if (sendto(_sock, (unsigned char*)&packet, sizeof(packet), 0, (const struct sockaddr *)&_artagPort, sizeof(struct sockaddr_in)) < 0) printf("sendto\n");
 }
 
-/*! \fn void SetVideoBroadcast(bool isBroadcast)
+/*! \fn void Camera:;SetVideoBroadcast(bool isBroadcast)
  *  \param isBroadcast Set the program whether to broadcast video stream to MATLAB
  */
-void SetVideoBroadcast(bool isBroadcast)
+void Camera::SetVideoBroadcast(bool isBroadcast)
 {
 	_isBroadcast = isBroadcast;
 }
 
-/*! \fn bool isBroadcast();
+/*! \fn bool Camera::isBroadcast();
  *	\brief A getter for the private variable _isBroadcast to broadcast video to MATLAB
  *	\return _isBroadcast
  */
-bool isBroadcast();
+bool Camera::isBroadcast()
 {
 	return _isBroadcast;
 }
@@ -142,7 +142,6 @@ GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data)
 		camera->SendImage(grayrz);
 		cvReleaseImage(&grayrz);
 	}
-
 	gst_object_unref(buffer);
 	
 	return GST_FLOW_OK;
