@@ -38,6 +38,7 @@ Camera::Camera(int remoteSock, struct sockaddr_in & videoPort, struct sockaddr_i
 	_sock = remoteSock;
 	_videoPort = videoPort;
 	_artagPort = artagPort;
+	_isBroadcast = false;
 	ar = new ARtagLocalizer();
 }
 
@@ -92,6 +93,23 @@ void Camera::SendARtag()
 	if (sendto(_sock, (unsigned char*)&packet, sizeof(packet), 0, (const struct sockaddr *)&_artagPort, sizeof(struct sockaddr_in)) < 0) printf("sendto\n");
 }
 
+/*! \fn void SetVideoBroadcast(bool isBroadcast)
+ *  \param isBroadcast Set the program whether to broadcast video stream to MATLAB
+ */
+void SetVideoBroadcast(bool isBroadcast)
+{
+	_isBroadcast = isBroadcast;
+}
+
+/*! \fn bool isBroadcast();
+ *	\brief A getter for the private variable _isBroadcast to broadcast video to MATLAB
+ *	\return _isBroadcast
+ */
+bool isBroadcast();
+{
+	return _isBroadcast;
+}
+
 /*! \fn GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data)
  * 	\brief The callback function when a new image is ready in the buffer.
  *  \param app_sink the appsink object used for gstreamer.
@@ -112,15 +130,18 @@ GstFlowReturn new_buffer (GstAppSink *app_sink, gpointer user_data)
 	cvCvtColor(camera->img,camera->gray,CV_BGR2GRAY);
 
 	//detect a image ...
-	if(!camera->ar->getARtagPose(camera->gray, camera->img, 0))
+	if (!camera->ar->getARtagPose(camera->gray, camera->img, 0))
 	{
 //		printf("No artag in the view.\n");
 	}
 	camera->SendARtag();
-	IplImage* grayrz = cvCreateImage(cvSize(160,120), IPL_DEPTH_8U, 1);
-	cvResize(camera->gray, grayrz);
-	camera->SendImage(grayrz);
-	cvReleaseImage(&grayrz);
+	if (camera->isBroadcast())
+	{
+		IplImage* grayrz = cvCreateImage(cvSize(160,120), IPL_DEPTH_8U, 1);
+		cvResize(camera->gray, grayrz);
+		camera->SendImage(grayrz);
+		cvReleaseImage(&grayrz);
+	}
 
 	gst_object_unref(buffer);
 	

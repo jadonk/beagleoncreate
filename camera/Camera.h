@@ -39,6 +39,8 @@ public:
 	void QuitMainLoop();
 	void SendImage(IplImage * image);
 	void SendARtag();
+	void SetVideoBroadcast(bool isBroadcast);
+	bool isBroadcast();
 
 	/*! The main loop of gstreamer. */
 	GMainLoop *loop;	
@@ -62,6 +64,7 @@ private:
 	int _sock;
 	struct sockaddr_in _videoPort;
 	struct sockaddr_in _artagPort;
+	bool _isBroadcast;
 };
 
 #endif
