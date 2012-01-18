@@ -102,24 +102,34 @@ void debugMsg(const char *func, const char *msg)
  */
 void HandleControls(Packet & packet)
 {
-	//debugMsg(__func__, "Sending control is not yet implemented!");	
-	if (packet.u.ctrl.data[0] == 1)
+	int ctrlType = packet.u.ctrl.data[0];
+	switch (ctrlType)
 	{
-		printf("pickup \n");
-		system(PICKUPBASH);
-	}
-	else if (packet.u.ctrl.data[0] == 0)
-	{
-		printf("drop \n");
-		system(DROPBASH);
-	}
-	else if (packet.u.ctrl.data[0] == 2)
-	{
-		printf("resetarm \n");
-		system(RESETBASH);
-	}
+		case 0:
+			printf("drop \n");
+			system(DROPBASH);
+			break;
+		case 1:
+			printf("pickup \n");
+			system(PICKUPBASH);
+			break;
+		case 2:
+			printf("resetarm \n");
+			system(RESETBASH);
+			break;
+		case 3:
+			printf("video broadcast on \n");
+			camera->SetVideoBroadcast(true);
+			break;
+		case 4:
+			printf("video broadcast off \n");
+			camera->SetVideoBroadcast(false);
+			break;
+		default:
+			break;
+	}	
 
-	printf("packet data: %d\n", packet.u.ctrl.data[0]);
+	printf("packet data: %d\n", ctrlType);
 }
 
 /*!

@@ -25,7 +25,7 @@ enum PacketType
 	INIT = 1,
 	/*! \deprecated end packet to end operation and allow other remote client to connect. */
 	END,
-	/*! ctrl packet to contrl any thing in this program (not implemented). */
+	/*! ctrl packet to contrl any thing in this program. */
 	CTRL,
 	/*! data packet contains the artag id and pose info. */
 	DATA,
