@@ -14,6 +14,12 @@ try
     fclose(ports.beacon);
     fclose(ports.sonar);
     fclose(ports.beagle);
+    delete(ports.create);
+    delete(ports.beacon);
+    delete(ports.sonar);
+    delete(ports.beagle);
+    clear
+    pause(10);
 catch
     disp('WARNING:  Function did not terminate correctly.  Output may be unreliable.')
 end
