@@ -64,11 +64,15 @@ int Create::InitSerial()
 
 	// configure port
 	struct termios portSettings;
+	
+	// make raw mode
+	cfmakeraw(&portSettings);
+	
 	if (cfsetispeed(&portSettings, CREATE_SERIAL_BRATE) != 0)
 		printf("Failed setting cfsetispeed\n");
 	if (cfsetospeed(&portSettings, CREATE_SERIAL_BRATE) != 0)
 		printf("Failed setting cfsetospeed\n");
-
+		
 	// set no parity, stop bits, databits
 	portSettings.c_cflag &= ~PARENB;
 	portSettings.c_cflag &= ~CSTOPB;
@@ -153,11 +157,13 @@ int Create::RunSerialHandler()
 					printf("%i ", int(buf[i]));
 				}
 				printf("\n");
+				#if 0
 				if (int(buf[bufLength-1]) == 3)
 				{
 					printf("stupid ETX crap.\n");
 					InitSerial();
 				}
+				#endif
 			}
 
 			if (FD_ISSET(_fd, &output))
