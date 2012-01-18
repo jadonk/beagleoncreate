@@ -84,6 +84,9 @@ BeagleShutdown(ports);
 
 _*This concludes the Beagle on Create User Manual.*_
 
+-----
+-----
+
 = Troubleshooting =
 
  * *I cannot SSH into the Beagleboard.*
