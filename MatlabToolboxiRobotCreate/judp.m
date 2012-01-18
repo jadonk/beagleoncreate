@@ -44,7 +44,7 @@ function [varargout] = judp(actionStr,varargin)
 
 SEND = 1;
 RECEIVE = 2;
-DEFAULT_TIMEOUT = 1000; % [milliseconds]
+DEFAULT_TIMEOUT = 100; % [milliseconds]
 
 % Handle input arguments.
 if strcmpi(actionStr,'send')

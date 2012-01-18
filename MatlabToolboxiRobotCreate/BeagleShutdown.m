@@ -2,7 +2,7 @@ function BeagleShutdown(ports)
 %BEAGLESHUTDOWN  Send a SHUTDOWN message to shutdown the sensor
 %   handler on the Create robot.
 %
-%   The udp port object 'ports' must first be initialized with the 
+%   The object 'ports' must first be initialized with the 
 %   CreateBeagleInit command (available as part of the Matlab Toolbox for 
 %   the iRobot Create).
 %
@@ -19,7 +19,7 @@ try
     delete(ports.sonar);
     delete(ports.beagle);
     clear
-    pause(10);
+    pause(5);
 catch
     disp('WARNING:  Function did not terminate correctly.  Output may be unreliable.')
 end
