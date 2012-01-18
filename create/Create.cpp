@@ -24,14 +24,10 @@
 
 /*! \fn Create::Create(int sock, struct sockaddr_in & createPort, unsigned long connectedHost)
  *  \brief A constructor for Create class. The serial communication is initialized here.
- *  \param sock The remote socket that was initialized and ready to be used.
- * 	\param createPort The port for sending and receiving stuff for Create.
- * 	\param connectedHost The connected host's ip address to avoid muliple connection.
  */
-Create::Create(unsigned long connectedHost)
+Create::Create()
 {
 	_fd = -1;
-	_connectedHost = connectedHost;
 	isEnding = false;
 	pthread_mutex_init(&_serialMutex, NULL);
 	_bufLength = 0;
@@ -65,8 +61,6 @@ int Create::InitSerial()
 		fcntl(_fd, F_SETFL, 0);
 		printf("Create serial port opened.\n");
 	}
-	
-	tcflush(_fd, TCIFLUSH);
 
 	// configure port
 	struct termios portSettings;
@@ -95,76 +89,11 @@ void Create::CloseSerial()
 	close(_fd);
 }
 
-/*! \fn void Create::SendSerial(char* buf, int bufLength)
- * 	\brief Send the stuff over to serial interface to iRobot Create
- * 	\param buf The "stuff" to be sent over.
- * 	\param bufLength The size of the stuff.
- */
-void Create::SendSerial(char* buf, int bufLength)
-{
-	int ret;
-#if 0
-	int            max_fd;
-	fd_set         output;
-	struct timeval timeout;
-	if (_fd == -1)
-	{
-		printf("ERROR: _fd is not initialized\n");
-		return;
-	}
-
-	if (bufLength == 0)
-		return;
-
-	while(1)
-	{
-		if(isEnding)
-			break;
-
-		FD_ZERO(&output);
-		FD_SET(_fd, &output);
-		max_fd = _fd + 1;
-
-		timeout.tv_sec = 1;
-		timeout.tv_usec = 0;
-
-		ret = select(max_fd, NULL, &output, NULL, &timeout);
-
-		if (ret < 0)
-			printf("ERROR: select failed\n");
-		else if (ret != 0)
-		{
-			if (FD_ISSET(_fd, &output))
-			{
-#endif
-		//		pthread_mutex_lock(&_serialMutex);
-				ret = write(_fd, buf, bufLength);
-		//		pthread_mutex_unlock(&_serialMutex);
-				if (ret == -1)
-				{
-					printf("ERROR: write error occurred.\n");
-					return;
-				}
-				printf("Sending to Create: \n\t\t");
-				for (int i = 0; i < bufLength; i++)
-				{
-					printf("%i ", int(buf[i]));
-				}
-				printf("\n");
-#if 0
-				return;
-			}
-		}
-		fflush(stdout);
-	}
-#endif
-}
-
-/*! \fn int Create::RunSerialListener()
- *  \brief The serial listener to listen anything coming from the iRobot Create.
+/*! \fn int Create::RunSerialHandler()
+ *  \brief The serial handler to listen anything coming from the iRobot Create or write serial to it.
  * 	\return 0 on success, -1 on fail.
  */
-int Create::RunSerialListener()
+int Create::RunSerialHandler()
 {
 	char buf[MAXPACKETSIZE];
 	int ret;
@@ -217,9 +146,7 @@ int Create::RunSerialListener()
 
 				if (send(_sock, buf, bufLength, 0) != bufLength)
 					printf("ERROR: send\n");
-#if 0
-				if (sendto(_sock, buf, bufLength, 0, (const struct sockaddr *) &_createPort, sizeof(struct sockaddr_in)) < 0) printf("ERROR: sendto\n");
-#endif
+
 				printf("Received from Create: \n");
 				for (int i = 0; i < bufLength; i++)
 				{	
@@ -333,13 +260,7 @@ int Create::RunTCPListener()
 		}
 		pthread_mutex_unlock(&_serialMutex);
 
-		if (bufLength == 0) continue;
 		if (bufLength < 0) printf("ERROR: recvfrom\n");
-	
-		if (_connectedHost != from.sin_addr.s_addr)
-			continue;
-
-//		SendSerial(buf, bufLength);
 	}
 	usleep(2000000);
 	close(sock);

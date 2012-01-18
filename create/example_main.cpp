@@ -15,9 +15,9 @@
 
 Create* create;
 
-void* CreateSerialListener(void* arg)
+void* CreateSerialHandler(void* arg)
 {
-	return (void*) create->RunSerialListener();
+	return (void*) create->RunSerialHandler();
 }
 
 void* CreateTCPListener(void* arg)
@@ -27,10 +27,10 @@ void* CreateTCPListener(void* arg)
 
 void StartListening(Packet & packet)
 {
-	create = new Create((unsigned long) packet.addr.s_addr);
+	create = new Create();
 	pthread_t createSerialThread;
 	printf("iRobot Create SerialListner Thread: %d.\n", 
-		pthread_create(&createSerialThread, NULL, CreateSerialListener, NULL));
+		pthread_create(&createSerialThread, NULL, CreateSerialHandler, NULL));
 	pthread_t createTCPThread;
 	printf("iRobot Create TCPListner Thread: %d.\n", 
 		pthread_create(&createTCPThread, NULL, CreateTCPListener, NULL));

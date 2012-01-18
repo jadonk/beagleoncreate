@@ -14,13 +14,12 @@
 class Create
 {
 public:
-	Create(unsigned long connectedHost);
+	Create();
 	~Create();
 	
 	int InitSerial();
 	void CloseSerial();
-	void SendSerial(char* buf, int bufLength);
-	int RunSerialListener();
+	int RunSerialHandler();
 	int RunTCPListener();
 	
 	/*! Flag to get the Create class ready to quit. */
@@ -31,7 +30,6 @@ private:
 	int _sock;
 	int _bufLength;
 	char _buf[MAXPACKETSIZE];
-	unsigned long _connectedHost;
 
 	pthread_mutex_t _serialMutex;
 };
