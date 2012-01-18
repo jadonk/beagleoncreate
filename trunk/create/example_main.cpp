@@ -9,55 +9,36 @@
 #include <iostream>
 
 #include "Create.h"
-#include "Packet.h"
+#include "../Packet.h"
 
 #define BEAGLE_PORT 8866
 
 Create* create;
-int createUDPsock = -1;
 
 void* CreateSerialListener(void* arg)
 {
 	return (void*) create->RunSerialListener();
 }
 
-void* CreateUDPListener(void* arg)
+void* CreateTCPListener(void* arg)
 {
-	return (void*) create->RunUDPListener(createUDPsock);
+	return (void*) create->RunTCPListener();
 }
 
 void StartListening(Packet & packet)
 {
-	// initialize udp sender for create
-	int remoteSock;
-	struct sockaddr_in remoteCreate;
-	remoteSock = socket(AF_INET, SOCK_DGRAM, 0);
-	if (remoteSock < 0) printf("ERROR: socket\n");
-	remoteCreate.sin_family = AF_INET;
-	remoteCreate.sin_addr.s_addr = packet.addr.s_addr;
-	remoteCreate.sin_port = htons(CREATE_PORT);
-
-	create = new Create(remoteSock, remoteCreate, (unsigned long) packet.addr.s_addr);
-
+	create = new Create((unsigned long) packet.addr.s_addr);
 	pthread_t createSerialThread;
 	printf("iRobot Create SerialListner Thread: %d.\n", 
 		pthread_create(&createSerialThread, NULL, CreateSerialListener, NULL));
-	
-	pthread_t createUDPThread;
-	printf("iRobot Create UDPListner Thread: %d.\n", 
-		pthread_create(&createUDPThread, NULL, CreateUDPListener, NULL));
+	pthread_t createTCPThread;
+	printf("iRobot Create TCPListner Thread: %d.\n", 
+		pthread_create(&createTCPThread, NULL, CreateTCPListener, NULL));
 }
 
 int main(int argc, char *argv[])
 {
-	// loading input parameters
-	/*if (argc < 2)
-	{
-		fprintf(stderr,"ERROR, no port provided\n");
-		exit(0);
-	}*/
-	
-	int sock, bufLength;
+	int sock, clientsock, bufLength;
 	socklen_t serverlen, fromlen;
 	struct sockaddr_in server;
 	struct sockaddr_in from;
@@ -65,7 +46,7 @@ int main(int argc, char *argv[])
 	Packet packet;
 
 	// initialize udp listener
-	sock = socket(AF_INET, SOCK_DGRAM, 0);
+	sock = socket(PF_INET, SOCK_STREAM, 0);
 	if (sock < 0) printf("ERROR: Opening socket\n");
 	serverlen = sizeof(server);
 	bzero(&server, serverlen);
@@ -77,13 +58,17 @@ int main(int argc, char *argv[])
 	fromlen = sizeof(struct sockaddr_in);
 
 	printf("Waiting for INIT message ...\n");
+	if (listen(sock, 1) < 0) return -1;
+	if ((clientsock = accept(sock, (struct sockaddr *) &from, &fromlen)) < 0) return -1;
+
 	while(1)
 	{
 		bzero(&buf, sizeof(buf));
 		bzero(&packet, sizeof(Packet));
 		packet.type = UNKNOWN;
-		bufLength = recvfrom(sock, buf, MAXPACKETSIZE, 
+		bufLength = recvfrom(clientsock, buf, MAXPACKETSIZE, 
 				0, (struct sockaddr *)&from, &fromlen);
+		if (bufLength == 0) continue;
 		if (bufLength < 0) printf("ERROR: recvfrom\n");
 
 		memcpy((unsigned char*)&packet, buf, 256);
@@ -103,6 +88,5 @@ int main(int argc, char *argv[])
 			break;
 		}
 	}
-
 	return 0;
 }

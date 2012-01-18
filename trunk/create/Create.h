@@ -4,11 +4,12 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include "pthread.h"
+#include "../Packet.h"
 
 /*! \file Create.h */
 
-/*! The udp port number for direct control of the iRobot Create. */
-#define CREATE_PORT 8888
+/*! The tcp port number for direct control of the iRobot Create. */
+#define CREATE_PORT 8865
 
 class Create
 {
@@ -28,6 +29,8 @@ public:
 private:
 	int _fd;
 	int _sock;
+	int _bufLength;
+	char _buf[MAXPACKETSIZE];
 	unsigned long _connectedHost;
 
 	pthread_mutex_t _serialMutex;

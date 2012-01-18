@@ -8,7 +8,6 @@
 #include <fcntl.h>
 #include <poll.h>
 
-#include "../Packet.h"
 #include "Create.h"
 
 /*! \file Create.cpp */
@@ -35,6 +34,7 @@ Create::Create(unsigned long connectedHost)
 	_connectedHost = connectedHost;
 	isEnding = false;
 	pthread_mutex_init(&_serialMutex, NULL);
+	_bufLength = 0;
 	InitSerial();
 }
 
@@ -66,6 +66,8 @@ int Create::InitSerial()
 		printf("Create serial port opened.\n");
 	}
 	
+	tcflush(_fd, TCIFLUSH);
+
 	// configure port
 	struct termios portSettings;
 	if (cfsetispeed(&portSettings, CREATE_SERIAL_BRATE) != 0)
@@ -100,6 +102,11 @@ void Create::CloseSerial()
  */
 void Create::SendSerial(char* buf, int bufLength)
 {
+	int ret;
+#if 0
+	int            max_fd;
+	fd_set         output;
+	struct timeval timeout;
 	if (_fd == -1)
 	{
 		printf("ERROR: _fd is not initialized\n");
@@ -109,20 +116,48 @@ void Create::SendSerial(char* buf, int bufLength)
 	if (bufLength == 0)
 		return;
 
-	pthread_mutex_lock(&_serialMutex);
-	int ret = write(_fd, buf, bufLength);
-	pthread_mutex_unlock(&_serialMutex);
-	if (ret == -1)
+	while(1)
 	{
-		printf("ERROR: write error occured.\n");
-		return;
+		if(isEnding)
+			break;
+
+		FD_ZERO(&output);
+		FD_SET(_fd, &output);
+		max_fd = _fd + 1;
+
+		timeout.tv_sec = 1;
+		timeout.tv_usec = 0;
+
+		ret = select(max_fd, NULL, &output, NULL, &timeout);
+
+		if (ret < 0)
+			printf("ERROR: select failed\n");
+		else if (ret != 0)
+		{
+			if (FD_ISSET(_fd, &output))
+			{
+#endif
+		//		pthread_mutex_lock(&_serialMutex);
+				ret = write(_fd, buf, bufLength);
+		//		pthread_mutex_unlock(&_serialMutex);
+				if (ret == -1)
+				{
+					printf("ERROR: write error occurred.\n");
+					return;
+				}
+				printf("Sending to Create: \n\t\t");
+				for (int i = 0; i < bufLength; i++)
+				{
+					printf("%i ", int(buf[i]));
+				}
+				printf("\n");
+#if 0
+				return;
+			}
+		}
+		fflush(stdout);
 	}
-	printf("Sending to Create: \n\t\t");
-	for (int i = 0; i < bufLength; i++)
-	{
-		printf("%i ", int(buf[i]));
-	}
-	printf("\n");
+#endif
 }
 
 /*! \fn int Create::RunSerialListener()
@@ -135,7 +170,7 @@ int Create::RunSerialListener()
 	int ret;
 	int bufLength;
 	int            max_fd;
-	fd_set         input;
+	fd_set         input, output;
 	struct timeval timeout;
 	
 	if (_fd == -1)
@@ -146,12 +181,15 @@ int Create::RunSerialListener()
 
 	while(1)
 	{
+		usleep(100);
 		if(isEnding)
 			break;
 			
 		/* Initialize the input set */
 		FD_ZERO(&input);
+		FD_ZERO(&output);
 		FD_SET(_fd, &input);
+		FD_SET(_fd, &output);
 		max_fd = _fd + 1;
 		
 		/* Initialize the timeout structure */
@@ -159,7 +197,7 @@ int Create::RunSerialListener()
 		timeout.tv_usec = 0;
 
 		/* Do the select */
-		ret = select(max_fd, &input, NULL, NULL, &timeout);
+		ret = select(max_fd, &input, &output, NULL, &timeout);
 		//ret = select(max_fd, &input, NULL, NULL, NULL);
 
 		/* See if there was an error */
@@ -170,9 +208,12 @@ int Create::RunSerialListener()
 			/* We have input */
 			if (FD_ISSET(_fd, &input))
 			{
-				pthread_mutex_lock(&_serialMutex);
 				bufLength = read(_fd, buf, MAXPACKETSIZE);
-				pthread_mutex_unlock(&_serialMutex);
+				if (bufLength == -1)
+				{
+					printf("ERROR: read\n");
+					continue;
+				}
 
 				if (send(_sock, buf, bufLength, 0) != bufLength)
 					printf("ERROR: send\n");
@@ -185,8 +226,43 @@ int Create::RunSerialListener()
 					printf("%i ", int(buf[i]));
 				}
 				printf("\n");
+				if (int(buf[bufLength-1]) == 3)
+				{
+					printf("stupid ETX crap.\n");
+					InitSerial();
+				}
 			}
+
+			if (FD_ISSET(_fd, &output))
+			{
+				pthread_mutex_lock(&_serialMutex);
+				bufLength = _bufLength;
+				_bufLength = 0;
+				if (bufLength > 0)
+				{
+					bzero(&buf, sizeof(buf));
+					memcpy(buf, _buf, bufLength);
+				}
+				pthread_mutex_unlock(&_serialMutex);
+				if (bufLength <= 0)
+					continue;
+
+				ret = write(_fd, buf, bufLength);
+				if (ret == -1)
+				{
+					printf("ERROR: write error occurred.\n");
+					continue;
+				}
+				printf("Sending to Create: \n\t\t");
+				for (int i = 0; i < bufLength; i++)
+				{
+					printf("%i ", int(buf[i]));
+				}
+				printf("\n");
+			}
+
 		}
+
 		fflush(stdout);
 	}
 	return 0;
@@ -205,14 +281,22 @@ int Create::RunTCPListener()
 	char buf[MAXPACKETSIZE];
 
 	// initialize tcp listener
-	sock = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock < 0) error("Opening socket");
+	sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (sock < 0) 
+	{
+		printf("ERROR: Opening socket\n");
+		return -1;
+	}
 	serverlen = sizeof(server);
 	bzero(&server, serverlen);
 	server.sin_family = AF_INET;
 	server.sin_addr.s_addr = INADDR_ANY;
 	server.sin_port = htons(CREATE_PORT);
-	if (bind(sock, (struct sockaddr *)&server, serverlen) < 0) error("binding");
+	if (bind(sock, (struct sockaddr *)&server, serverlen) < 0)
+	{
+		printf("ERROR: binding\n");
+		return -1;
+	}
 	fromlen = sizeof(struct sockaddr_in);
 
 	printf("Ready to listen to Create message ...\n");
@@ -221,13 +305,12 @@ int Create::RunTCPListener()
 		printf("failed to listen on Create socket\n");
 		return -1;
 	}
-	printf("end of listen TCP socket %d\n", sock);
-	if ((clientsock = accept(sock, (struct sockaddr *) &from, &fromlen)) < 0)
+	clientsock = accept(sock, (struct sockaddr *) &from, &fromlen);
+	if (clientsock < 0)
 	{
 		printf("failed to accept client connection on Create socket\n");
 	       return -1;	
 	}
-	printf("accepted the Create TCP connection\n");
 	_sock = clientsock;
 	while(1)
 	{
@@ -238,14 +321,17 @@ int Create::RunTCPListener()
 		}
 		
 		bzero(&buf, sizeof(buf));
-#if 0
-		bufLength = timeout_recvfrom(_sock, buf, MAXPACKETSIZE, 
-				(struct sockaddr *) &from, &fromlen, 1);
-#endif
-		#if 1
 		bufLength = recvfrom(clientsock, buf, MAXPACKETSIZE, 
 				0, (struct sockaddr *)&from, &fromlen);
-		#endif
+
+		pthread_mutex_lock(&_serialMutex);
+		_bufLength = bufLength;
+		if (bufLength > 0)
+		{
+			bzero(&_buf, sizeof(_buf));
+			memcpy(_buf, buf, bufLength);
+		}
+		pthread_mutex_unlock(&_serialMutex);
 
 		if (bufLength == 0) continue;
 		if (bufLength < 0) printf("ERROR: recvfrom\n");
@@ -253,9 +339,11 @@ int Create::RunTCPListener()
 		if (_connectedHost != from.sin_addr.s_addr)
 			continue;
 
-		SendSerial(buf, bufLength);
+//		SendSerial(buf, bufLength);
 	}
-	CloseSerial();
+	usleep(2000000);
+	close(sock);
+	//CloseSerial();
 	printf("Ending RunUDPListener \n");
 	return 0;
 }
