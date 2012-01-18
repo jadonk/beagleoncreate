@@ -1,11 +1,44 @@
 #summary One-sentence summary of this page.
-
+= User Manual =
+<wiki:toc max_depth="2" />
 = Introduction =
+Beagle on Create is a project that utilizes Beagleboard with a robotic development platform iRobot Create. The Beagleboard serves as the sensor interface as well as teleoperation device for the Create. The sensors including an USB webcam and 3 sonars. This user manual serves as a guide for users to connect to the Beagleboard and the sensors.
 
-Add your content here.
+= Before you start =
+An operational Beagle on Create setup includes following items:
+ * [http://store.irobot.com/shop/index.jsp?categoryId=3311368 iRobot Create]
+ * [http://beagleboard.org/ Beagleboard]
+ * [http://www.amazon.com/Microsoft-LifeCam-VX-700/dp/B002JXKGFA Microsoft LifeCam VX-700 USB Webcam]
+ * Three [http://www.parallax.com/tabid/768/ProductID/92/Default.aspx PING))) Ultrasonic Distance Sensor]
+ * [http://www.newegg.com/Product/Product.aspx?Item=N82E16833315091 Wifi Adapter]
+ * GPIO Addon board
 
+Please double check that the items listed above is present and is properly connected as shown in the pictures below.
 
-= Details =
+(PICTURE OF GENERAL SETUP HERE)
+
+= Ready for action =
+
+Press the power button on the iRobot Create to turn on the system. Since the Beagleboard is powered from the battery of the Create, the Beagleboard will also get turned on when the Create is powered.
+
+== Connect through SSH ==
+
+== Calibration ==
+
+=== Sonars ===
+
+=== ARtag beacons ===
+
+== Quitting the program ==
+
+= MATLAB client functions =
+
+= Troubleshooting =
+
+== Hardware ==
+
+== Software ==
+
 
 Add your content here.  Format your content with:
   * Text in *bold* or _italic_
