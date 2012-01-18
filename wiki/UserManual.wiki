@@ -98,7 +98,7 @@ _*This concludes the Beagle on Create User Manual.*_
  * *Sonar reading is NaN.*
  Sonar reading is NaN when the distance reading is more than 3 meters  or when the distance reading is less than 0.
 
- * *Address already in use: Cannot bind.*
+ * *Address already in use: Cannot bind/connect.*
  If you have just called {{{BeagleShutdown}}}, give it one minute and retry. Ultimately you can restart the MATLAB program.
 
  * *Host unreachable: connect.*
