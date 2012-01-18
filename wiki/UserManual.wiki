@@ -86,6 +86,18 @@ _*This concludes the Beagle on Create User Manual.*_
 
 = Troubleshooting =
 
-== Hardware ==
+ * *I cannot SSH into the Beagleboard.*
+ There are many things that can go wrong when you can't SSH into the Beagleboard. 
+  # Check that the Wifi dongle's blue LED is lit. If not, try restart the Beagleboard by toggling the power of the iRobot Create.
+  # Double check the IP address of the Beagleboard is correct when you put it into the PuTTY's configuration.
+  # If you can access the wireless router's page and know the username and password, try go to "192.168.1.1" on the browser and go to the *Status* tab -> *LAN* tab. You should see a list of IP address under *Active Clients*. If the Beagleboard's IP address is not there... get [mailto:ty244@cornell.edu Chuck].
 
-== Software ==
+ * *Sonar reading is NaN.*
+ Sonar reading is NaN when the distance reading is more than 3 meters  or when the distance reading is less than 0.
+
+ * *Address already in use: Cannot bind.*
+ If you have just called {{{BeagleShutdown}}}, give it one minute and retry. Ultimately you can restart the MATLAB program.
+
+ * *Host unreachable: connect.*
+ Make sure the IP address you put into {{{CreateBeagleInit}}} is a reachable IP address.
+ 
