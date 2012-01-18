@@ -71,7 +71,7 @@ The calibration GUI provides you a grayscale version of the video stream from th
 
 === Calibrate ARtag beacon ===
 The process of calibrating ARtag beacon is similar to calibrate sonars. Make sure the lighting in the room is good so that ARtag can be easily detectable.
- # Click on the *Calibrate Beacon* Button to start the calibration process. The calibration GUI will then ask you to place an ARtag in front of the camera at 4 known distances. Make sure there is only one ARtag in the camera's view. 
+ # Click on the *Calibrate Camera* Button to start the calibration process. The calibration GUI will then ask you to place an ARtag in front of the camera at 4 known distances. Make sure there is only one ARtag in the camera's view. 
  # Click *Next* button when you have placed the ARtag at the corresponding distance. 
  # After 4 distances are measured, Click *Done Calibration* to finish beacon calibration. An calibration offset is calculated by the mean of the four measurement offsets.
  # The {{{BEACON_OFFSET}}} variable is automatically saved to a file named {{{beacon_calibration.mat}}} so that you can load it in the future.
