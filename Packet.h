@@ -11,6 +11,10 @@
 #define MAXPACKETSIZE 5000 
 /*! The maximum number of ARtags that can be sent over at once. */
 #define MAXARTAGSEEN 10
+/*! The packet size when using PacketType SONAR. */
+#define SONAR_PACKET_SIZE 24
+/*! The packet size when using PacketType DATA. */
+#define ARTAG_PACKET_SIZE MAXARTAGSEEN*20+12
 
 /*!
  * 	\struct Packet Packet.h "Packet.h"
