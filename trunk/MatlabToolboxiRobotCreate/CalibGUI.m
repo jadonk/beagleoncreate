@@ -63,6 +63,10 @@ if isempty(varargin)
 else
     ports = varargin{1};
 end
+
+% send CTRL msg to beagleboard to enable video streaming
+BeagleControl(ports, 3);
+
 global TEST_DISTANCES;
 TEST_DISTANCES = [1/4, 1/2, 3/4, 1]*11*0.0254; % meters
 global d_measured;
@@ -117,6 +121,8 @@ while(DONE == 0)
 
     pause(0.1)
 end
+% send CTRL msg to beagleboard to disable video streaming
+BeagleControl(ports, 4);
 close(gcf);
 
 
