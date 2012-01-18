@@ -59,7 +59,7 @@ DONE = 0;
 global ports;
 if isempty(varargin)
     DONE = 1;
-    fprintf(2, '??? Too few input argument, use gui(ports) to run this.\n');
+    fprintf(2, '??? Too few input argument, use CalibGUI(ports) to run this.\n');
 else
     ports = varargin{1};
 end
