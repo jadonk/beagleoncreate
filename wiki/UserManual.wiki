@@ -33,9 +33,10 @@ username: beagle
 password: cornell
 }}}
 
-Start the beagleoncreate sensor interface program by executing following command.
+Start the beagleoncreate sensor interface program by executing following commands.
 {{{
-sudo ~/beagleoncreate/main
+cd beagleoncreate
+sudo ./main
 }}}
 
 Once the program started running, the PuTTY session window should look like the picture shown below.
