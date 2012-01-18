@@ -90,7 +90,7 @@ void Camera::SendARtag()
 			packet.u.data.yaw[i] += 6.28;
 		}
 	}
-	if (sendto(_sock, (unsigned char*)&packet, sizeof(packet), 0, (const struct sockaddr *)&_artagPort, sizeof(struct sockaddr_in)) < 0) printf("sendto\n");
+	if (sendto(_sock, (unsigned char*)&packet, ARTAG_PACKET_SIZE, 0, (const struct sockaddr *)&_artagPort, sizeof(struct sockaddr_in)) < 0) printf("sendto\n");
 }
 
 /*! \fn void Camera:;SetVideoBroadcast(bool isBroadcast)

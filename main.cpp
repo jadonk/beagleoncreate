@@ -192,7 +192,7 @@ void* SonarSender(void* arg)
 			packet.u.sonar.dist1 = dist1;
 			packet.u.sonar.dist2 = dist2;
 			packet.u.sonar.dist3 = dist3;
-			if (sendto(remoteSockUDP, (unsigned char*)&packet, sizeof(packet), 0, (const struct sockaddr *)&remoteSonar, sizeof(struct sockaddr_in)) < 0) printf("sendto\n");
+			if (sendto(remoteSockUDP, (unsigned char*)&packet, SONAR_PACKET_SIZE, 0, (const struct sockaddr *)&remoteSonar, sizeof(struct sockaddr_in)) < 0) printf("sendto\n");
 		}
 		usleep(SONAR_MEASURE_RATE);
 	}
