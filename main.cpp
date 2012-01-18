@@ -282,8 +282,8 @@ void* StreamSensorData(void* arg)
 	debugMsg(__func__, "cameraThread halted");
 	pthread_join(createSerialThread, NULL);
 	debugMsg(__func__, "createSerialThread halted");
-	pthread_join(createUDPThread, NULL);
-	debugMsg(__func__, "createUDPThread halted");
+	pthread_join(createTCPThread, NULL);
+	debugMsg(__func__, "createTCPThread halted");
 	pthread_join(sonarThread, NULL);
 	debugMsg(__func__, "sonarThread halted");
 	delete camera;
@@ -436,6 +436,8 @@ void* ListenMessage(void* arg)
 		if (packet.type == END) debugMsg(__func__, "Waiting for INIT message ...");
 		if (packet.type == SHUTDOWN) break;
 	}
+	usleep(2000000);
+	close(sock);
 
 	return 0;
 }
