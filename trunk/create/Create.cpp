@@ -157,13 +157,6 @@ int Create::RunSerialHandler()
 					printf("%i ", int(buf[i]));
 				}
 				printf("\n");
-				#if 0
-				if (int(buf[bufLength-1]) == 3)
-				{
-					printf("stupid ETX crap.\n");
-					InitSerial();
-				}
-				#endif
 			}
 
 			if (FD_ISSET(_fd, &output))
