@@ -33,11 +33,11 @@ This is a test application.
 #define BEAGLE_PORT 8866
 
 /*! The gpio pin number that sonar 1 is connected to. */
-#define SONAR_GPIO1 137
+#define SONAR_GPIO1 136
 /*! The gpio pin number that sonar 2 is connected to. */
-#define SONAR_GPIO2 136
+#define SONAR_GPIO2 135
 /*! The gpio pin number that sonar 3 is connected to. */
-#define SONAR_GPIO3 135
+#define SONAR_GPIO3 134
 
 /*! Max connection requests */
 #define MAXPENDING 1
