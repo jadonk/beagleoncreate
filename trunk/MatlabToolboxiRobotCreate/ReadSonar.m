@@ -41,7 +41,7 @@ try
 	if size > 14
 		sonarLeft = typecast(uint8(packet(13:16)),'single');
 		sonarFront = typecast(uint8(packet(17:20)),'single');
-		dist.sonar3 = typecast(uint8(packet(21:24)),'single');
+		sonarRight = typecast(uint8(packet(21:24)),'single');
         if sonarLeft > 0
             sonarLeft = sonarLeft + SONAR_OFFSET(1);
         else
