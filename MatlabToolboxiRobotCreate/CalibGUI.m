@@ -97,7 +97,6 @@ function varargout = gui_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
-set(handles.btnNext,'Visible','off');
 global ports;
 global DONE;
 global dist;
@@ -122,7 +121,7 @@ while(DONE == 0)
     pause(0.1)
 end
 % send CTRL msg to beagleboard to disable video streaming
-BeagleControl(ports, 4);
+BeagleControl(ports.beagle, 4);
 close(gcf);
 
 
@@ -140,6 +139,7 @@ global cam_measured;
 j = mod(cameraCalib,length(TEST_DISTANCES)) + 1;
 cameraCalib = cameraCalib + 1;
 startstr = sprintf('');
+
 if cameraCalib == 1
     BEACON_OFFSET = 0;
     % Show explanation message
@@ -157,7 +157,12 @@ end
 % Camera Calibration
 if cameraCalib > 1
     j = mod(cameraCalib-2,length(TEST_DISTANCES)) + 1;
-    cam_measured(j) = tag(1).z;
+    if isempty(tag)
+        cameraCalib = cameraCalib - 1;
+        set(handles.txtMsg,'String', 'There is no ARtag detected in the view, click Next again when there is one.');
+    else
+        cam_measured(j) = tag(1).z;
+    end
 
     if cameraCalib == length(TEST_DISTANCES)+1
         cameraCalib = 0;
@@ -207,7 +212,9 @@ global sonarCalib;
 global TEST_DISTANCES;
 global d_measured;
 
-sonarName = ['Left' 'Front' 'Right'];
+sonarName{1} = 'Left';
+sonarName{2} = 'Front';
+sonarName{3} = 'Right';
 btn = [handles.btnCalibLeftSonar handles.btnCalibFrontSonar handles.btnCalibRightSonar];
 
 j = mod(sonarCalib(sonarNum),length(TEST_DISTANCES)) + 1;
@@ -218,7 +225,7 @@ if sonarCalib(sonarNum) == 1
     % Show explanation message
     startstr = sprintf('\nStarting sonar calibration!\n(NOTE: For calibration, it is recommended that you use a large, flat\nobject and hold it perpendicular to the direction the sonar sensor is facing.)');
 end
-str = strcat(startstr,sprintf('\nPlease place the object %gcm (%g feet) away from sonar %g', TEST_DISTANCES(j)*100, TEST_DISTANCES(j)/0.3048, sonarName(sonarNum)));
+str = strcat(startstr,sprintf('\nPlease place the object %gcm (%g feet) away from sonar %s', TEST_DISTANCES(j)*100, TEST_DISTANCES(j)/0.3048, sonarName{sonarNum}));
 set(handles.txtMsg,'String', str);
 
 if sonarCalib(sonarNum) == length(TEST_DISTANCES)
@@ -233,7 +240,7 @@ if sonarCalib(sonarNum) > 1
 
     if isnan(dist(sonarNum))
         sonarCalib(sonarNum) = sonarCalib(sonarNum) - 1;
-        set(handles.txtMsg,'String', '\nSonar reading was NaN, click Next again');
+        set(handles.txtMsg,'String', 'Sonar reading was NaN, click Next again');
     else
         d_measured(sonarNum,j) = dist(sonarNum);
     end
@@ -247,7 +254,7 @@ if sonarCalib(sonarNum) > 1
         save sonar_calibration.mat SONAR_OFFSET;
         str = sprintf('\nCalibration complete! SONAR_OFFSET is now [%gm %gm %gm]', SONAR_OFFSET(1), SONAR_OFFSET(2), SONAR_OFFSET(3));
         set(handles.txtMsg,'String', str);
-        str = sprintf('Calibrate %g Sonar', sonarName(sonarNum));
+        str = sprintf('Calibrate %s Sonar', sonarName{sonarNum});
         set(btn(sonarNum),'String', str);
     end
 end
