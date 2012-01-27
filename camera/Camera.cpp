@@ -72,7 +72,7 @@ void Camera::SendImage(IplImage * image)
 void Camera::SendARtag()
 {
 	Packet packet;
-	memset(&packet, 0, sizeof(packet));
+	memset(&packet, -1, sizeof(packet));
 	packet.type = DATA;
 	int numARtags = ar->getARtagSize();
 	numARtags = numARtags < MAXARTAGSEEN ? numARtags:MAXARTAGSEEN;
