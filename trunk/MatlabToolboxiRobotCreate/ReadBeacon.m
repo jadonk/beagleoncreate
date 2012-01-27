@@ -1,13 +1,18 @@
-function out = ReadBeacon(ports)
-%READBEACON  Retrieve the most recent artag reading from a Beagleboard.
-%   ReadBeacon(ports) returns
-%   out.id = The id of the beacon
-%   out.x = The x position of the beacon
-%   out.y = The y position of the beacon
-%   out.z = The z position of the beacon
-%   out.yaw = The orientation of the beacon
+function beacons = ReadBeacon(beaconPort)
+%READBEACON  Retrieve the most recent ARtag reading from a Beagleboard.
+%   ReadBeacon(beaconPort) returns
+%   beacons(i).id = The id of the i'th beacon in camera view
+%   beacons(i).x = The x position of the i'th beacon in camera view
+%   beacons(i).y = The y position of the i'th beacon in camera view
+%   beacons(i).z = The z position of the i'th beacon in camera view
+%   beacons(i).yaw = The orientation of the i'th beacon in camera view
 %
-%   The udp port object 'ports' must first be initialized with the 
+%   The total number of beacon detected is length(beacons) and it should
+%   not be more than 10.
+%   
+%   When there is no ARtag detected, isempty(beacons) return 1.
+%
+%   The udp port object 'beaconPort' must first be initialized with the 
 %   CreateBeagleInit command (available as part of the Matlab Toolbox for 
 %   the iRobot Create).
 %
@@ -23,37 +28,40 @@ if isempty(BEACON_OFFSET)
 BEACON_OFFSET = 0;
 end
 
+% the maximum number of ARtags that will get detected in one camera view.
 MAXARTAGSEEN = 10;
 HEADER = 12;
 % Initialize preliminary return value
-out.id(1:MAXARTAGSEEN) = NaN;
-out.x(1:MAXARTAGSEEN) = 0;
-out.y(1:MAXARTAGSEEN) = 0;
-out.z(1:MAXARTAGSEEN) = 0;
-out.yaw(1:MAXARTAGSEEN) = 0;
+beacons = [];
+beacon.id = NaN;
+beacon.x = 0;
+beacon.y = 0;
+beacon.z = 0;
+beacon.yaw = 0;
 try
-    fclose(ports.beacon);
+    fclose(beaconPort);
     pause(.01);
-    fopen(ports.beacon);
+    fopen(beaconPort);
 
     %read in packet and get size
-    [packet size] = fread(ports.beacon);
+    [packet size] = fread(beaconPort);
     if size > 15
         for i = 1:MAXARTAGSEEN
             idIndex = HEADER+(i-1)*4+1;
-            out.id(i) = typecast(uint8(packet(idIndex:idIndex+3)),'int32');
-            if out.id(i) == 0
-                out.id(i) = NaN;
+            beacon.id = typecast(uint8(packet(idIndex:idIndex+3)),'int32');
+            if beacon.id == 0 || beacon.id == -1
                 break;
             end
             xIndex = idIndex+4*MAXARTAGSEEN;
-            out.x(i) = typecast(uint8(packet(xIndex:xIndex+3)),'single');
+            beacon.x = typecast(uint8(packet(xIndex:xIndex+3)),'single');
             yIndex = xIndex+4*MAXARTAGSEEN;
-            out.y(i) = typecast(uint8(packet(yIndex:yIndex+3)),'single');
+            beacon.y = typecast(uint8(packet(yIndex:yIndex+3)),'single');
             zIndex = yIndex+4*MAXARTAGSEEN;
-            out.z(i) = typecast(uint8(packet(zIndex:zIndex+3)),'single') + BEACON_OFFSET;
+            beacon.z = typecast(uint8(packet(zIndex:zIndex+3)),'single') + BEACON_OFFSET;
             yawIndex = zIndex+4*MAXARTAGSEEN;
-            out.yaw(i) = typecast(uint8(packet(yawIndex:yawIndex+3)),'single');
+            beacon.yaw = typecast(uint8(packet(yawIndex:yawIndex+3)),'single');
+
+            beacons = [beacons beacon];
         end
     end
 catch

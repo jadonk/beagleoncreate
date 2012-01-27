@@ -27,11 +27,10 @@ sonarPort = 8833;
 ports.create = tcpip(remoteHost, createPort, 'LocalPort', createPort);
 ports.beagle = tcpip(remoteHost, beaglePort, 'LocalPort', beaglePort);
 % get UDP packet from the remote host
-% ports.create = udp(remoteHost, createPort, 'LocalPort', createPort);
-% ports.beagle = udp(remoteHost, beaglePort, 'LocalPort', beaglePort);
 ports.beacon = udp(remoteHost, artagPort, 'LocalPort', artagPort);
 ports.sonar = udp(remoteHost, sonarPort, 'LocalPort', sonarPort);
 
+% set the timeout for receiving from port
 set(ports.create,'Timeout',td)
 set(ports.beacon,'Timeout',0.2)
 set(ports.sonar,'Timeout',0.2)

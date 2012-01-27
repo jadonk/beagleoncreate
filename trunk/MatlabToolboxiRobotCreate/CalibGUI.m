@@ -22,7 +22,7 @@ function varargout = CalibGUI(varargin)
 
 % Edit the above text to modify the response to help CalibGUI
 
-% Last Modified by GUIDE v2.5 16-Jan-2012 15:44:27
+% Last Modified by GUIDE v2.5 26-Jan-2012 19:23:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -65,14 +65,14 @@ else
 end
 
 % send CTRL msg to beagleboard to enable video streaming
-BeagleControl(ports, 3);
+BeagleControl(ports.beagle, 3);
 
 global TEST_DISTANCES;
-TEST_DISTANCES = [1/4, 1/2, 3/4, 1]*11*0.0254; % meters
+TEST_DISTANCES = [2 3 4 5]*0.3048; % 2 to 5 foot, the unit is in meters
 global d_measured;
 d_measured = zeros(3,length(TEST_DISTANCES));
 global sonarCalib;
-sonarCalib = 0;
+sonarCalib = [0 0 0];
 global SONAR_OFFSET;
 SONAR_OFFSET = [0 0 0];
 
@@ -97,6 +97,7 @@ function varargout = gui_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
+set(handles.btnNext,'Visible','off');
 global ports;
 global DONE;
 global dist;
@@ -106,18 +107,17 @@ while(DONE == 0)
     
     PlotCreateVideo(1);
 
-    tag = ReadBeacon(ports);
-    tagInd = find(~isnan(tag.id));
-    if ~isempty(tagInd)
-        set(handles.txtX,'String',num2str(tag.x(tagInd(1))));
-        set(handles.txtY,'String',num2str(tag.y(tagInd(1))));
-        set(handles.txtZ,'String',num2str(tag.z(tagInd(1))));
-        set(handles.txtYaw,'String',num2str(tag.yaw(tagInd(1))));
+    tag = ReadBeacon(ports.beacon);
+    if ~isempty(tag)
+        set(handles.txtX,'String',num2str(tag(1).x));
+        set(handles.txtY,'String',num2str(tag(1).y));
+        set(handles.txtZ,'String',num2str(tag(1).z));
+        set(handles.txtYaw,'String',num2str(tag(1).yaw));
     end
-    dist = ReadSonar(ports);
-    set(handles.txtDist1,'String',num2str(dist.sonar1));
-    set(handles.txtDist2,'String',num2str(dist.sonar2));
-    set(handles.txtDist3,'String',num2str(dist.sonar3));
+    dist = [ReadSonar(ports.sonar, 1) ReadSonar(ports.sonar, 2) ReadSonar(ports.sonar, 3)];
+    set(handles.txtDist1,'String',num2str(dist(1)));
+    set(handles.txtDist2,'String',num2str(dist(2)));
+    set(handles.txtDist3,'String',num2str(dist(3)));
 
     pause(0.1)
 end
@@ -145,7 +145,7 @@ if cameraCalib == 1
     % Show explanation message
     startstr = sprintf('\nStarting camera beacon calibration!\n(NOTE: For calibration, make sure you have good lighting');
 end
-str = strcat(startstr,sprintf('\n(Step %d/%d) Please place the ARtag %gcm away', j, length(TEST_DISTANCES), TEST_DISTANCES(j)*100));
+str = strcat(startstr,sprintf('\n(Step %d/%d) Please place the ARtag %gcm (%g feet) away', j, length(TEST_DISTANCES), TEST_DISTANCES(j)*100), TEST_DISTANCES(j)/0.3048);
 set(handles.txtMsg,'String', str);
 
 if cameraCalib == length(TEST_DISTANCES)
@@ -157,7 +157,7 @@ end
 % Camera Calibration
 if cameraCalib > 1
     j = mod(cameraCalib-2,length(TEST_DISTANCES)) + 1;
-    cam_measured(j) = tag.z(1);
+    cam_measured(j) = tag(1).z;
 
     if cameraCalib == length(TEST_DISTANCES)+1
         cameraCalib = 0;
@@ -174,52 +174,81 @@ end
 
 
 
-% --- Executes on button press in btnCalibSonar.
-function btnCalibSonar_Callback(hObject, eventdata, handles)
-% hObject    handle to btnCalibSonar (see GCBO)
+% --- Executes on button press in btnCalibLeftSonar.
+function btnCalibLeftSonar_Callback(hObject, eventdata, handles)
+% hObject    handle to btnCalibLeftSonar (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+CalibSonar(handles, 1);
+
+
+% --- Executes on button press in btnCalibFrontSonar.
+function btnCalibFrontSonar_Callback(hObject, eventdata, handles)
+% hObject    handle to btnCalibFrontSonar (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+CalibSonar(handles, 2);
+
+
+% --- Executes on button press in btnCalibRightSonar.
+function btnCalibRightSonar_Callback(hObject, eventdata, handles)
+% hObject    handle to btnCalibRightSonar (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+CalibSonar(handles, 3);
+
+function CalibSonar(handles, sonarNum)
 global SONAR_OFFSET;
 global dist;
 global sonarCalib;
 global TEST_DISTANCES;
 global d_measured;
 
-j = mod(sonarCalib,length(TEST_DISTANCES)) + 1;
-sonarCalib = sonarCalib + 1;
-i = ceil(sonarCalib/length(TEST_DISTANCES));
+sonarName = ['Left' 'Front' 'Right'];
+btn = [handles.btnCalibLeftSonar handles.btnCalibFrontSonar handles.btnCalibRightSonar];
+
+j = mod(sonarCalib(sonarNum),length(TEST_DISTANCES)) + 1;
+sonarCalib(sonarNum) = sonarCalib(sonarNum) + 1;
 startstr = sprintf('');
-if sonarCalib == 1
-    SONAR_OFFSET = [0 0 0];
+if sonarCalib(sonarNum) == 1
+    SONAR_OFFSET(sonarNum) = 0;
     % Show explanation message
     startstr = sprintf('\nStarting sonar calibration!\n(NOTE: For calibration, it is recommended that you use a large, flat\nobject and hold it perpendicular to the direction the sonar sensor is facing.)');
 end
-str = strcat(startstr,sprintf('\nPlease place the object %gcm (%g/4 the length of letter-size paper) away from sonar %g', TEST_DISTANCES(j)*100, j, i));
+str = strcat(startstr,sprintf('\nPlease place the object %gcm (%g feet) away from sonar %g', TEST_DISTANCES(j)*100, TEST_DISTANCES(j)/0.3048, sonarName(sonarNum)));
 set(handles.txtMsg,'String', str);
 
-if sonarCalib == 3*length(TEST_DISTANCES)
-    set(handles.btnCalibSonar,'String', 'Done Calibration');
+if sonarCalib(sonarNum) == length(TEST_DISTANCES)
+    set(btn(sonarNum),'String', 'Done Calibration');
 else
-    set(handles.btnCalibSonar,'String', 'Next');
+    set(btn(sonarNum),'String', 'Next');
 end
 
 % Sonar Calibration
-if sonarCalib > 1
-    j = mod(sonarCalib-2,length(TEST_DISTANCES)) + 1;
-    i = ceil((sonarCalib-1)/length(TEST_DISTANCES));
-    d = [dist.sonar1 dist.sonar2 dist.sonar3];
-    d_measured(i,j) = d(i);
+if sonarCalib(sonarNum) > 1
+    j = mod(sonarCalib(sonarNum)-2,length(TEST_DISTANCES)) + 1;
 
-    if sonarCalib == 3*length(TEST_DISTANCES)+1
-        sonarCalib = 0;
+    if isnan(dist(sonarNum))
+        sonarCalib(sonarNum) = sonarCalib(sonarNum) - 1;
+        set(handles.txtMsg,'String', '\nSonar reading was NaN, click Next again');
+    else
+        d_measured(sonarNum,j) = dist(sonarNum);
+    end
+
+    if sonarCalib(sonarNum) == length(TEST_DISTANCES)+1
+        sonarCalib(sonarNum) = 0;
         % Calculate offset
-        SONAR_OFFSET = [mean(TEST_DISTANCES - d_measured(1,:)) mean(TEST_DISTANCES - d_measured(2,:)) mean(TEST_DISTANCES - d_measured(3,:))];
-        d_measured = zeros(3,length(TEST_DISTANCES));
+        SONAR_OFFSET(sonarNum) = mean(TEST_DISTANCES - d_measured(sonarNum,:));
+        d_measured(sonarNum,:) = zeros(1,length(TEST_DISTANCES));
         % Save to file so you only have to calibrate once
         save sonar_calibration.mat SONAR_OFFSET;
         str = sprintf('\nCalibration complete! SONAR_OFFSET is now [%gm %gm %gm]', SONAR_OFFSET(1), SONAR_OFFSET(2), SONAR_OFFSET(3));
         set(handles.txtMsg,'String', str);
-        set(handles.btnCalibSonar,'String', 'Calibrate Sonar');
+        str = sprintf('Calibrate %g Sonar', sonarName(sonarNum));
+        set(btn(sonarNum),'String', str);
     end
 end
 

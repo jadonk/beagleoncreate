@@ -1,13 +1,15 @@
-function dist = ReadSonar(ports)
+function distance = ReadSonar(sonarPort, varargin)
 %READSONAR  Retrieve the most recent sonar reading from a Beagleboard.
-%   ReadSonar(ports) returns the last sonar distance reading that was 
+%   ReadSonar(sonarPort, sonarNum) returns the last sonar distance reading that was 
 %   captured by a Beagleboard attached to an iRobot Create or Roomba, in 
 %   meters.
-%   dist.sonar1 = distance measurement of sonar1
-%   dist.sonar2 = distance measurement of sonar2
-%   dist.sonar3 = distance measurement of sonar3
+%   sonarLeft = distance measurement of sonar at the left.
+%   sonarFront = distance measurement of sonar at the front.
+%   sonarRight = distance measurement of sonar at the right.
+%   sonarBack = distance measurement of sonar at the back (not
+%   implemented).
 %
-%   The udp port object 'ports' must first be initialized with the 
+%   The udp port object 'sonarPort' must first be initialized with the 
 %   CreateBeagleInit command (available as part of the Matlab Toolbox for 
 %   the iRobot Create).
 %   
@@ -26,34 +28,41 @@ SONAR_OFFSET = [0 0 0];
 end
 
 % Initialize preliminary return value
-dist.sonar1 = NaN;
-dist.sonar2 = NaN;
-dist.sonar3 = NaN;
+sonarLeft = NaN;
+sonarFront = NaN;
+sonarRight = NaN;
+sonarBack = NaN;
 try
-    fclose(ports.sonar);
+    fclose(sonarPort);
     pause(.01);
-    fopen(ports.sonar);
+    fopen(sonarPort);
 
-	[packet size] = fread(ports.sonar);
+	[packet size] = fread(sonarPort);
 	if size > 14
-		dist.sonar1 = typecast(uint8(packet(13:16)),'single');
-		dist.sonar2 = typecast(uint8(packet(17:20)),'single');
+		sonarLeft = typecast(uint8(packet(13:16)),'single');
+		sonarFront = typecast(uint8(packet(17:20)),'single');
 		dist.sonar3 = typecast(uint8(packet(21:24)),'single');
-        if dist.sonar1 > 0
-            dist.sonar1 = dist.sonar1 + SONAR_OFFSET(1);
+        if sonarLeft > 0
+            sonarLeft = sonarLeft + SONAR_OFFSET(1);
         else
-            dist.sonar1 = NaN;
+            sonarLeft = NaN;
         end
-        if dist.sonar2 > 0
-            dist.sonar2 = dist.sonar2 + SONAR_OFFSET(2);
+        if sonarFront > 0
+            sonarFront = sonarFront + SONAR_OFFSET(2);
         else
-            dist.sonar2 = NaN;
+            sonarFront = NaN;
         end
-        if dist.sonar3 > 0
-            dist.sonar3 = dist.sonar3 + SONAR_OFFSET(3);
+        if sonarRight > 0
+            sonarRight = sonarRight + SONAR_OFFSET(3);
         else
-            dist.sonar3 = NaN;
+            sonarRight = NaN;
         end
+    end
+    distSonar = [sonarRight sonarFront sonarLeft sonarBack];
+    if isempty(varargin)
+        distance = distSonar(2);
+    else
+        distance = distSonar(varargin{1});
     end
 catch err
     disp('WARNING:  Function did not terminate correctly.  Output may be unreliable.')
